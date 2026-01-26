@@ -1,0 +1,19 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Build outputs
+out/
+target/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+
+# Env
+.env
+*.env
+
