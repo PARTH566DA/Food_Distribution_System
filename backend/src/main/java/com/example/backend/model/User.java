@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "users")
-public class Users {
+public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
     @Column(nullable = false)
@@ -28,11 +28,12 @@ public class Users {
     private Role role;
 
     @Column(nullable = false)
-    private Boolean isActive = true;
+    private Boolean active = true;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
