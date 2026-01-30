@@ -37,5 +37,11 @@ public class User {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.PERSIST)
+    private Volunteer volunteer;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.PERSIST)
+    private Ngo ngo;
 }
 
