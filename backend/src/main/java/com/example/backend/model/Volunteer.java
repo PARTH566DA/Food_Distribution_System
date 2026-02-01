@@ -12,11 +12,6 @@ public class Volunteer {
     @Column(name = "user_id")
     private Long userId;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "user_id")
-    private User user;
-
     @Column(name = "is_available")
     private Boolean available;
 

@@ -12,10 +12,6 @@ public class Ngo {
     @Column(name = "user_id")
     private Long userId;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "user_id")
-    private User user;
 
     @Column(name = "ngo_name", nullable = false)
     private String ngoName;

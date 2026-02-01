@@ -2,6 +2,7 @@ package com.example.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -30,18 +31,8 @@ public class User {
     @Column(nullable = false)
     private Boolean active = true;
 
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.PERSIST)
-    private Volunteer volunteer;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.PERSIST)
-    private Ngo ngo;
 }
 
