@@ -1,7 +1,11 @@
 package com.example.backend.model;
 
+import com.example.backend.model.Enums.VehicleType;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.List;
+
 
 @Data
 @Entity
@@ -12,6 +16,11 @@ public class Volunteer {
     @Column(name = "user_id")
     private Long userId;
 
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @Column(name = "is_available")
     private Boolean available;
 
@@ -21,6 +30,13 @@ public class Volunteer {
 
     @Column(name = "last_known_latitude")
     private Double lastKnownLatitude;
+
     @Column(name = "last_known_longitude")
     private Double lastKnownLongitude;
+
+    @OneToMany(mappedBy = "volunteer", fetch = FetchType.LAZY)
+    private List<FoodAssignment> assignments;
+
+    @OneToMany(mappedBy = "volunteer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<VolunteerAvailability> availabilitySlots;
 }

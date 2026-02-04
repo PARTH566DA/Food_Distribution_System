@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.example.backend.model.Enums.NeedyZoneStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -34,4 +36,14 @@ public class NeedyZones {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdBy;
+
+    @OneToMany(mappedBy = "needyZone", fetch = FetchType.LAZY)
+    private List<ZoneTag> zoneTags;
+
+    @OneToMany(mappedBy = "targetZone", fetch = FetchType.LAZY)
+    private List<FoodListing> targetedListings;
 }

@@ -12,6 +12,12 @@ public class Ngo {
     @Column(name = "user_id")
     private Long userId;
 
+    // Map the NGO PK to the user's PK and create a foreign key to users(user_id)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private User user;
+
 
     @Column(name = "ngo_name", nullable = false)
     private String ngoName;

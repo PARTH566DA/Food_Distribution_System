@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.example.backend.model.Enums.TagReason;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,4 +27,12 @@ public class ZoneTag {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "needy_zone_id", nullable = false)
+    private NeedyZones needyZone;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tagged_by_user_id", nullable = false)
+    private User taggedBy;
 }

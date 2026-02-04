@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.example.backend.model.Enums.AssignmentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,4 +29,14 @@ public class FoodAssignment {
     @Column(name = "assignment_status")
     private AssignmentStatus status;
 
+    @OneToOne
+    @JoinColumn(name = "food_id", nullable = false, unique = true)
+    private FoodListing foodListing;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "volunteer_user_id")
+    private Volunteer volunteer;
+
+    @OneToOne(mappedBy = "assignment", cascade = CascadeType.ALL)
+    private DeliveryProof deliveryProof;
 }

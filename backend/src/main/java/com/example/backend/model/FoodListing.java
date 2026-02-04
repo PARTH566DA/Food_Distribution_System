@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.example.backend.model.Enums.Status;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 public class FoodListing {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "food_id")
     private Long foodId;
 
@@ -36,5 +38,18 @@ public class FoodListing {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+
+    @OneToOne(mappedBy = "foodListing")
+    private FoodAssignment foodAssignment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_zone_id")
+    private NeedyZones targetZone;
+
 
 }
