@@ -17,6 +17,12 @@ public class FoodListing {
     @Column(name = "food_id")
     private Long foodId;
 
+    @Column(name = "is_vegetarian" , nullable = false)
+    private Boolean vegetarian;
+
+    @Column(name = "is_packed_in_box" , nullable = false)
+    private Boolean isPackaged;
+
     @Column(name = "quantity" , nullable = false)
     private Integer quantity;
 
@@ -34,6 +40,12 @@ public class FoodListing {
 
     @Column(name = "description" , nullable = false)
     private String description;
+
+    @Column(name = "pickup_address" , nullable = false)
+    private String address;
+
+    @Column(name = "image_url")
+    private String imageUrl;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

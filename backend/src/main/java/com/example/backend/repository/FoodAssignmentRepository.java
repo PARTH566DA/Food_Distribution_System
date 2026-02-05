@@ -1,4 +1,3 @@
-package com.example.backend.repository;
 
 import com.example.backend.model.FoodAssignment;
 import com.example.backend.model.Enums.AssignmentStatus;

@@ -28,12 +28,6 @@ public class Volunteer {
     @Column(name = "vehicle_type")
     private VehicleType vehicleType;
 
-    @Column(name = "last_known_latitude")
-    private Double lastKnownLatitude;
-
-    @Column(name = "last_known_longitude")
-    private Double lastKnownLongitude;
-
     @OneToMany(mappedBy = "volunteer", fetch = FetchType.LAZY)
     private List<FoodAssignment> assignments;
 

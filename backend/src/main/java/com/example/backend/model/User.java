@@ -37,6 +37,12 @@ public class User {
     @Column(nullable = false)
     private Boolean active = true;
 
+    @Column(name = "last_known_latitude")
+    private Double lastKnownLatitude;
+
+    @Column(name = "last_known_longitude")
+    private Double lastKnownLongitude;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
