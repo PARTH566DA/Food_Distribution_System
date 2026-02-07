@@ -1,0 +1,14 @@
+# Frontend Copilot Instructions
+
+Stack:
+- React
+- Tailwind CSS
+- JavaScript (JSX)
+
+Architecture:
+- Use a single global gradient background.
+- Background must live in a layout or background component.
+- Do NOT define gradients inside page components.
+
+UI Rules:
+- Do not change visual effects unless explicitly asked.
