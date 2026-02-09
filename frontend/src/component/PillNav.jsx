@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 
+// To override the hover bubble color, paste your color here as `hoverPillColor` (e.g. '#FED0CB')
 const PillNav = ({
   items = [],
   activeHref = "",
@@ -10,14 +11,32 @@ const PillNav = ({
   pillColor = "#1a1a1a",
   pillTextColor = "#1a1a1a",
   hoveredPillTextColor = "#ffffff",
+  hoverPillColor = "#FDDED9", 
 }) => {
   const circleRefs = useRef([]);
   const tlRefs = useRef([]);
   const location = useLocation();
 
+  // Lighten a hex color by a given amount (0-1)
+  const lightenHex = (hex, amount = 0.18) => {
+    if (!hex) return hex;
+    let h = hex.replace('#', '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const num = parseInt(h, 16);
+    let r = (num >> 16) & 255;
+    let g = (num >> 8) & 255;
+    let b = num & 255;
+    r = Math.round(r + (255 - r) * amount);
+    g = Math.round(g + (255 - g) * amount);
+    b = Math.round(b + (255 - b) * amount);
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  };
+
   useEffect(() => {
     // Small timeout ensures the DOM has rendered before GSAP calculates sizes
     const initTimeout = setTimeout(() => {
+      // prefer explicit hover color prop when provided, otherwise compute lighter shade
+      const hoverColor = (hoverPillColor && hoverPillColor.toString().trim()) ? hoverPillColor : lightenHex(pillColor, 0.18);
       circleRefs.current.forEach((circle, i) => {
         if (!circle || !circle.parentElement) return;
         const pill = circle.parentElement;
@@ -28,7 +47,7 @@ const PillNav = ({
         const D = Math.ceil(2 * R) + 2;
         const delta = Math.ceil(R - Math.sqrt(Math.max(0, R * R - (w * w) / 4))) + 1;
 
-        // Set initial state of the hover circle
+        // Set initial state of the hover circle (lighter than pillColor)
         gsap.set(circle, {
           width: D,
           height: D,
@@ -37,7 +56,7 @@ const PillNav = ({
           xPercent: -50,
           scale: 0,
           transformOrigin: `${D - delta}px`,
-          backgroundColor: pillColor,
+          backgroundColor: hoverColor,
           borderRadius: D / 6,
         });
 

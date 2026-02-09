@@ -8,7 +8,7 @@ const App = () => {
   return (
     <div className="w-full h-screen">
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/addfood" element={<AddFood />} />
         <Route path="/notification" element={<Notification />} />
         <Route path="*" element={<Home />} />

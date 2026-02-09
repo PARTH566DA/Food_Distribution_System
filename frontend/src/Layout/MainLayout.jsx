@@ -3,8 +3,8 @@ import GlassSurface from "../component/GlassSurface";
 import PillNav from "../component/PillNav";
 
 const defaultGradientProps = {
-    color1: "#f3e4d5",
-    color2: "#ffc7ad",
+    color1: "#faaca2",
+    color2: "#fcb594",
     color3: "#f88ca6",
     timeSpeed: 2.35,
     colorBalance: -0.02,
@@ -31,7 +31,7 @@ const MainLayout = ({
     children,
     gradientProps = {},
     navItems = [
-        { label: "Home", href: "/" },
+        { label: "Home", href: "/home" },
         { label: "AddFood", href: "/addfood" },
         { label: "Notification", href: "/notification" }
     ],
@@ -49,17 +49,12 @@ const MainLayout = ({
 
                 {/* Header Area */}
                 <header className="">
-                    {/* Glass Bar background */}
+                    {/* Solid Bar background */}
                     <div className="absolute top-[12px] left-[12px] right-[12px] h-[80px]">
-                        <GlassSurface
-                            width="100%"
-                            height={80}
-                            borderRadius={25}
-                            blur={20}
-                            backgroundOpacity={0.3}
-                            opacity={0.4}
+                        <div 
+                            className="w-full h-full rounded-[25px] flex items-center justify-center"
+                            style={{ backgroundColor: '#FFECEA' }}
                         >
-
                         {/* Centered Pill Navigation */}
                         <div className="relative z-20 flex items-center justify-center">
                             <PillNav
@@ -71,14 +66,14 @@ const MainLayout = ({
                                 className="bg-black/20 backdrop-blur-sm rounded-full p-2"
                             />
                         </div>
-                        </GlassSurface>
+                        </div>
                     </div>
 
 
                 </header>
 
                 {/* Main Content Area */}
-                <main className="mt-6 flex-1 overflow-auto rounded-3xl bg-white/10 backdrop-blur-sm p-6 font-light font-alexandria text-dimgray">
+                <main className="mt-[100px] flex-1 overflow-auto rounded-3xl bg-white/10 backdrop-blur-sm p-6 font-light font-alexandria text-dimgray">
                     {children}
                 </main>
             </div>
