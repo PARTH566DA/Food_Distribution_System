@@ -88,11 +88,11 @@ const PillNav = ({
 
   return (
     <nav className={`flex items-center justify-center ${className}`}>
-      <ul className="flex list-none gap-[32px] m-6 px-8 py-4 bg-white/20 rounded-full backdrop-blur-sm">
+      <ul className="flex list-none gap-[32px] ">
         {items.map((item, i) => {
           const currentPath = location?.pathname || "";
           const isActive = activeHref ? activeHref === item.href : currentPath === item.href;
-          const commonClasses = "relative overflow-hidden inline-flex items-center justify-center pt-[16px] pb-[16px] pl-[12px] pr-[12px] rounded-full font-light font-alexandria text-dimgray text-sm uppercase tracking-wider no-underline transition-all";
+          const commonClasses = "relative overflow-hidden inline-flex items-center justify-center pt-[16px] pb-[16px] pl-[12px] pr-[12px] rounded-full font-medium text-sm uppercase tracking-wider no-underline transition-all";
           const labelColor = isActive ? hoveredPillTextColor : pillTextColor;
 
           const content = (

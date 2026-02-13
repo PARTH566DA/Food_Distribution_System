@@ -123,7 +123,7 @@ const Feed = ({ pageSize = 5 }) => {
       )}
 
       {/* Feed Items */}
-      <div className="space-y-[12px]">
+      <div className="space-y-4">
         {items.map((item) => (
           <FeedItem
             key={item.id || item.foodId}

@@ -63,17 +63,14 @@ const MainLayout = ({
                                 pillColor="#FED0CB"
                                 pillTextColor="#6B5454"
                                 hoveredPillTextColor="#6B5454"
-                                className="bg-black/20 backdrop-blur-sm rounded-full p-2"
                             />
                         </div>
                         </div>
                     </div>
-
-
                 </header>
 
                 {/* Main Content Area */}
-                <main className="mt-[100px] flex-1 overflow-auto rounded-3xl bg-white/10 backdrop-blur-sm p-6 font-light font-alexandria text-dimgray">
+                <main className="mt-[64px] flex-1 overflow-auto rounded-3xl">
                     {children}
                 </main>
             </div>
