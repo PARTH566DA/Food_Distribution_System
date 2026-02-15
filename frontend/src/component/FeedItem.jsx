@@ -23,7 +23,7 @@ const FeedItem = ({ item, onClaim }) => {
         return {
             base: "relative overflow-hidden rounded-full bg-[#FF8B77] text-white font-semibold text-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg active:scale-95",
             dimensions: "w-[180px] h-[50px]",
-            hover: "hover:bg-[#FF7A66] hover:-translate-y-1",
+            hover: "hover:bg-[#FF7A66]",
             animation: "before:content-[''] before:absolute before:top-0 before:left-[-100%] before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-700 hover:before:left-[100%]"
         };
     };
@@ -102,7 +102,7 @@ const FeedItem = ({ item, onClaim }) => {
                     {/* Food Details */}
                     <div className="flex-1 flex flex-col justify-between">
                         {/* Top Section */}
-                        <div>
+                        <div className="w-[60%]">
                             <h3 className="text-2xl font-semibold text-black">
                                 {item.description}
                             </h3>
@@ -110,6 +110,8 @@ const FeedItem = ({ item, onClaim }) => {
                             <p className="text-base text-[#797979] mb-4">
                                 {item.location}
                             </p>
+                        </div>
+                        <div>
 
                             <div className="w-full h-[2px] bg-[#D9D9D9] mb-4"></div>
 
