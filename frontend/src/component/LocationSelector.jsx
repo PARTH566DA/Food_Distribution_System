@@ -161,7 +161,6 @@ const LocationSelector = () => {
                             center={latitude !== null && longitude !== null ? [latitude, longitude] : defaultCenter}
                             zoom={defaultZoom}
                             style={{ height: '100%', width: '100%' }}
-                            key={`${latitude}-${longitude}`}
                         >
                             <TileLayer
                                 url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"

@@ -124,7 +124,7 @@ const Feed = ({ pageSize = 5 }) => {
 
       {/* Feed Items */}
       <div className="space-y-4">
-        {items.map((item) => (
+        {items.filter(item => item.status === 'available').map((item) => (
           <FeedItem
             key={item.id || item.foodId}
             item={item}
@@ -174,7 +174,7 @@ const Feed = ({ pageSize = 5 }) => {
       )}
 
       {/* Empty State */}
-      {!loading && items.length === 0 && !error && (
+      {!loading && items.filter(item => item.status === 'available').length === 0 && !error && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-white/40 text-4xl mb-4">🍽️</div>
           <h3 className="text-white font-medium mb-2">No food items available</h3>
