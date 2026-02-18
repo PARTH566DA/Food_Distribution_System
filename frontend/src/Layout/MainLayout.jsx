@@ -32,7 +32,7 @@ const MainLayout = ({
     gradientProps = {},
     navItems = [
         { label: "Home", href: "/home" },
-        { label: "AddFood", href: "/addfood" },
+        { label: "Add Food", href: "/addfood" },
         { label: "Notification", href: "/notification" }
     ],
     activeHref = "/",
