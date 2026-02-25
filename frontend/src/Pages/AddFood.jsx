@@ -10,6 +10,7 @@ import NonVegIcon from '../assets/non-veg-logo.png';
 import QuantityIcon from '../assets/Group.svg';
 import ClockIcon from '../assets/clock.svg';
 import PackageIcon from '../assets/package.svg';
+import { addFood } from '../api/food';
 
 // For MapmyIndia, you would need their official plugin: @mappls/mappls-web-maps
 // Currently using CartoDB as it works without complex authentication
@@ -54,6 +55,8 @@ const AddFood = () => {
   const [showMap, setShowMap] = useState(false);
   const [isEditingQuantity, setIsEditingQuantity] = useState(false);
   const [isEditingExpiry, setIsEditingExpiry] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   // Default center: Ahmedabad coordinates
   const defaultCenter = [23.0225, 72.5714];
@@ -189,6 +192,7 @@ const AddFood = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError(null);
 
     // Validate GPS coordinates
     if (!formData.latitude || !formData.longitude) {
@@ -196,39 +200,16 @@ const AddFood = () => {
       return;
     }
 
+    setSubmitLoading(true);
     try {
-      // Create FormData for file upload
-      const submitData = new FormData();
-      submitData.append('vegetarian', formData.vegetarian);
-      submitData.append('description', formData.description);
-      submitData.append('quantity', formData.quantity);
-      submitData.append('expiryTime', formData.expiryTime);
-      submitData.append('location', formData.location);
-      submitData.append('latitude', formData.latitude);
-      submitData.append('longitude', formData.longitude);
-      submitData.append('packed', formData.packed);
-      if (formData.image) {
-        submitData.append('image', formData.image);
-      }
-
-      // TODO: Replace with your actual backend endpoint
-      // const response = await fetch('http://localhost:8080/api/food-listings', {
-      //   method: 'POST',
-      //   body: submitData,
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error('Failed to submit food listing');
-      // }
-
-      console.log("Form submitted:", formData);
-
-      // Navigate to home page after successful submission
+      await addFood(formData);
+      // Navigate to home (feed) after successful submission
       navigate('/');
-
     } catch (error) {
       console.error('Error submitting form:', error);
-      // You can add error handling/notification here
+      setSubmitError(error.message || 'Failed to submit food listing. Please try again.');
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -246,9 +227,10 @@ const AddFood = () => {
     return (
       <button
         type="submit"
-        className={`${styles.base} ${styles.dimensions} ${styles.hover} ${styles.animation} cursor-pointer`}
+        disabled={submitLoading}
+        className={`${styles.base} ${styles.dimensions} ${styles.hover} ${styles.animation} cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
       >
-        <span className="relative z-10">Submit</span>
+        <span className="relative z-10">{submitLoading ? 'Submitting...' : 'Submit'}</span>
       </button>
     );
   };
@@ -496,6 +478,13 @@ const AddFood = () => {
                 </div>
               </div>
             </div>
+
+            {/* Submit Error */}
+            {submitError && (
+              <div className="w-full mt-4 px-4 py-3 bg-red-100 border border-red-300 text-red-700 rounded-xl text-sm">
+                {submitError}
+              </div>
+            )}
 
             {/* Show Map Button - appears when map is hidden */}
             {!showMap && (

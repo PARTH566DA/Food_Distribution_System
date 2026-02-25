@@ -66,7 +66,7 @@ const FeedItem = ({ item, onClaim }) => {
 
     const handleClaimClick = () => {
         if (onClaim && item.status === 'available') {
-            onClaim(item.foodId);
+            onClaim(item.id);
         }
     };
 
@@ -108,7 +108,7 @@ const FeedItem = ({ item, onClaim }) => {
                             </h3>
 
                             <p className="text-base text-[#797979] mb-4">
-                                {item.location}
+                                {item.address || item.location}
                             </p>
                         </div>
                         <div>

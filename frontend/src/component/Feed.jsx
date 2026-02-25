@@ -75,7 +75,7 @@ const Feed = ({ pageSize = 5 }) => {
       // Update the item status locally
       setItems(prevItems =>
         prevItems.map(item =>
-          item.foodId === foodId 
+          item.id === foodId 
             ? { ...item, status: 'claimed' }
             : item
         )
@@ -128,7 +128,7 @@ const Feed = ({ pageSize = 5 }) => {
           <FeedItem
             key={item.id || item.foodId}
             item={item}
-            onClaim={claiming === item.foodId ? null : handleClaim}
+            onClaim={claiming === item.id ? null : handleClaim}
           />
         ))}
       </div>
@@ -176,7 +176,6 @@ const Feed = ({ pageSize = 5 }) => {
       {/* Empty State */}
       {!loading && items.filter(item => item.status === 'available').length === 0 && !error && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="text-white/40 text-4xl mb-4">🍽️</div>
           <h3 className="text-white font-medium mb-2">No food items available</h3>
           <p className="text-white/60 text-sm mb-4">Check back later for new donations</p>
           <button

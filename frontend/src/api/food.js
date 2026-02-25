@@ -1,120 +1,121 @@
-// Mock API for food feed - replace with actual backend endpoints when ready
+// API configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
-// Simulate API delay
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// API client with error handling (JSON)
+const apiClient = async (endpoint, options = {}) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    });
 
-// Mock food data
-const mockFoodItems = [
-  {
-    id: 1,
-    foodId: "FOOD001",
-    description: "Fresh Vegetable Curry with Rice",
-    quantity: "20",
-    packed: true,
-    vegetarian: true,
-    imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop",
-    createdAt: "2026-01-15T10:30:00Z",
-    location: "Community Kitchen Downtown",
-    donor: "City Food Bank",
-    expiryTime: "12",
-    status: "available"
-  },
-  {
-    id: 2,
-    foodId: "FOOD002",
-    description: "Chicken Biryani with Raita",
-    quantity: "15",
-    packed: false,
-    vegetarian: false,
-    imageUrl: "https://images.unsplash.com/photo-1563379091339-03246963d7d9?w=400&h=300&fit=crop",
-    createdAt: "2026-01-15T09:45:00Z",
-    location: "Restaurant District",
-    donor: "Spice Garden Restaurant",
-    expiryTime: "2",
-    status: "available"
-  },
-  {
-    id: 3,
-    foodId: "FOOD003",
-    description: "Mixed Fruit Salad Bowls",
-    quantity: "30",
-    packed: true,
-    vegetarian: true,
-    imageUrl: "https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=400&h=300&fit=crop",
-    createdAt: "2026-01-15T08:20:00Z",
-    location: "Farmer's Market",
-    donor: "Fresh Fruits Co.",
-    expiryTime: "2026-01-15T16:00:00Z",
-    status: "available"
-  },
-  {
-    id: 4,
-    foodId: "FOOD004", 
-    description: "Homemade Sandwiches & Soup",
-    quantity: "25",
-    packed: true,
-    vegetarian: true,
-    imageUrl: "https://images.unsplash.com/photo-1539252554453-80ab65ce3586?w=400&h=300&fit=crop",
-    createdAt: "2026-01-15T07:15:00Z",
-    location: "Central Community Hall",
-    donor: "Volunteers United",
-    expiryTime: "2026-01-15T15:30:00Z", 
-    status: "available"
-  },
-  {
-    id: 5,
-    foodId: "FOOD005",
-    description: "Pizza Slices & Garlic Bread",
-    quantity: "18",
-    packed: false,
-    vegetarian: false,
-    imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop",
-    createdAt: "5",
-    location: "University Campus",
-    donor: "Mario's Pizzeria",
-    expiryTime: "2026-01-15T14:00:00Z",
-    status: "claimed"
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
   }
-];
+};
 
-// Simulate paginated API response
+// Fetch paginated food listings
 export const fetchFoodPage = async (page = 0, size = 5) => {
-  await delay(800); // Simulate network delay
-  
-  const startIndex = page * size;
-  const endIndex = startIndex + size;
-  const items = mockFoodItems.slice(startIndex, endIndex);
-  
-  return {
-    items,
-    currentPage: page,
-    totalPages: Math.ceil(mockFoodItems.length / size),
-    totalItems: mockFoodItems.length,
-    hasMore: endIndex < mockFoodItems.length
-  };
-};
+  try {
+    const response = await apiClient(`/food/feed?page=${page}&size=${size}`);
 
-// Simulate claim food action
-export const claimFood = async (foodId) => {
-  await delay(500);
-  
-  // In real implementation, this would make a POST request
-  console.log(`Claiming food item: ${foodId}`);
-  
-  return {
-    success: true,
-    message: "Food claimed successfully"
-  };
-};
+    // The backend returns: { success: true, data: { items, currentPage, totalPages, totalItems, hasMore } }
+    if (response.success && response.data) {
+      return response.data;
+    }
 
-// Simulate get food details
-export const getFoodDetails = async (foodId) => {
-  await delay(300);
-  
-  const item = mockFoodItems.find(item => item.foodId === foodId);
-  if (!item) {
-    throw new Error('Food item not found');
+    throw new Error('Invalid response format');
+  } catch (error) {
+    console.error('Failed to fetch food page:', error);
+    throw error;
   }
-  
-  return item;
 };
+
+// Claim a food listing
+export const claimFood = async (foodId) => {
+  try {
+    // For now, sending a hardcoded volunteerId
+    // In production, this should come from authenticated user session
+    const response = await apiClient(`/food/${foodId}/claim`, {
+      method: 'POST',
+      body: JSON.stringify({ volunteerId: 1 }),
+    });
+
+    if (response.success) {
+      return response;
+    }
+
+    throw new Error(response.message || 'Failed to claim food');
+  } catch (error) {
+    console.error('Failed to claim food:', error);
+    throw error;
+  }
+};
+
+// Get specific food listing details
+export const getFoodDetails = async (foodId) => {
+  try {
+    const response = await apiClient(`/food/${foodId}`);
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new Error('Invalid response format');
+  } catch (error) {
+    console.error('Failed to fetch food details:', error);
+    throw error;
+  }
+};
+
+// Add a new food listing (multipart/form-data with optional image)
+export const addFood = async (formData) => {
+  try {
+    const body = new FormData();
+    body.append('vegetarian', formData.vegetarian);
+    body.append('packed', formData.packed);
+    body.append('description', formData.description);
+    body.append('quantity', formData.quantity);
+    body.append('expiryTime', formData.expiryTime);
+    body.append('location', formData.location);
+    body.append('latitude', formData.latitude);
+    body.append('longitude', formData.longitude);
+    if (formData.image) {
+      body.append('image', formData.image);
+    }
+    // Optionally attach userId if auth is available
+    // body.append('userId', userId);
+
+    const response = await fetch(`${API_BASE_URL}/food`, {
+      method: 'POST',
+      body,
+      // Do NOT set Content-Type — browser sets it automatically with boundary for multipart
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.success) {
+      return data.data;
+    }
+    throw new Error(data.message || 'Failed to add food listing');
+  } catch (error) {
+    console.error('Failed to add food listing:', error);
+    throw error;
+  }
+};
+
