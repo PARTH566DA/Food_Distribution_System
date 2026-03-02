@@ -29,6 +29,8 @@ public class FoodListingDTO {
     private String status;
     private Double pickupLatitude;
     private Double pickupLongitude;
+    private String donorName;
+    private String donorContact;
 
     /**
      * Convert FoodListing entity to DTO
@@ -48,6 +50,8 @@ public class FoodListingDTO {
                 .status(mapStatus(foodListing.getStatus()))
                 .pickupLatitude(foodListing.getPickupLatitude())
                 .pickupLongitude(foodListing.getPickupLongitude())
+                .donorName(foodListing.getUser() != null ? foodListing.getUser().getUserName() : null)
+                .donorContact(foodListing.getUser() != null ? foodListing.getUser().getMobileNumber() : null)
                 .build();
     }
 

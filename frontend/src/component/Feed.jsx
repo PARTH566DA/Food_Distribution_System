@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import FeedItem from './FeedItem';
+import FoodDetailModal from './FoodDetailModal';
 import { fetchFoodPage, claimFood } from '../api/food';
 
 const Feed = ({ pageSize = 5 }) => {
@@ -9,6 +11,8 @@ const Feed = ({ pageSize = 5 }) => {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
   const [claiming, setClaiming] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
   const loaderRef = useRef();
 
   // Load initial page
@@ -65,6 +69,10 @@ const Feed = ({ pageSize = 5 }) => {
     }
   };
 
+  const handleAccept = (item) => {
+    setSelectedItem(item);
+  };
+
   const handleClaim = async (foodId) => {
     if (claiming) return;
 
@@ -80,6 +88,8 @@ const Feed = ({ pageSize = 5 }) => {
             : item
         )
       );
+      setSelectedItem(null);
+      setExpandedId(null);
     } catch (err) {
       setError('Failed to claim food item. Please try again.');
       console.error('Claim error:', err);
@@ -128,7 +138,11 @@ const Feed = ({ pageSize = 5 }) => {
           <FeedItem
             key={item.id || item.foodId}
             item={item}
-            onClaim={claiming === item.id ? null : handleClaim}
+            onAccept={handleAccept}
+            onConfirm={handleClaim}
+            confirming={claiming === (item.id || item.foodId)}
+            expanded={expandedId === (item.id || item.foodId)}
+            onExpand={(id) => setExpandedId(prev => prev === id ? null : id)}
           />
         ))}
       </div>
@@ -186,6 +200,19 @@ const Feed = ({ pageSize = 5 }) => {
           </button>
         </div>
       )}
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {selectedItem && (
+          <FoodDetailModal
+            key={selectedItem.id}
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
+            onConfirm={handleClaim}
+            confirming={claiming === selectedItem.id}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
