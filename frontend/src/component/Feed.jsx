@@ -182,7 +182,6 @@ const Feed = ({ pageSize = 5 }) => {
       {/* End of Feed */}
       {!hasMore && items.length > 0 && (
         <div className="flex flex-col items-center py-8 text-center">
-          <div className="text-white/40 text-2xl mb-2">🎉</div>
           <p className="text-white/50 text-sm">You've reached the end of the feed</p>
         </div>
       )}

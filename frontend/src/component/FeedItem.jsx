@@ -260,8 +260,8 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand })
                             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
                             className="overflow-hidden"
                         >
-                            <div className="mt-4 px-2 pb-2 space-y-4">
-                                <div className="w-full h-[1px] bg-[#D9D9D9]" />
+                            <div className="mt-4 space-y-[10px]">
+                                <div className="w-full h-[1px]  bg-[#D9D9D9]" />
 
                                 {/* Donor Information */}
                                 <div className="w-full rounded-[20px] bg-white border border-[#FFE0DB] p-4">
@@ -375,7 +375,7 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand })
                                 <button
                                     onClick={() => onConfirm?.(item.id)}
                                     disabled={confirming}
-                                    className="relative overflow-hidden w-full h-[56px] rounded-full font-bold text-lg text-white transition-all duration-300 ease-in-out transform hover:scale-[1.02] hover:shadow-xl active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                    className="relative overflow-hidden w-full h-[56px] rounded-full font-bold text-lg text-white transition-all duration-300 ease-in-out transform hover:shadow-xl active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                                     style={{
                                         background: confirming
                                             ? '#cd5c3f'
@@ -386,7 +386,6 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand })
                                     <span
                                         className="absolute inset-0 rounded-full"
                                         style={{
-                                            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)',
                                             backgroundSize: '200% 100%',
                                             animation: confirming ? 'none' : 'shimmer 2s infinite',
                                         }}
