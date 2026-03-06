@@ -42,7 +42,7 @@ public class FoodListingService {
         Pageable pageable = PageRequest.of(page, size);
         // Mark expired listings before fetching (runs in its own committed transaction)
         markExpiredListings();
-        return foodListingRepository.findByStatusOrderByExpiryAsc(Status.OPEN.name(), pageable);
+        return foodListingRepository.findByStatusWithUser(Status.OPEN, pageable);
     }
 
     /**

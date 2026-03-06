@@ -204,7 +204,7 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                                 <div>
                                     <p className="text-sm text-gray-500">Donor Name</p>
                                     <p className="text-base font-semibold text-gray-900">
-                                        {item.donorName || 'Anonymous Donor'}
+                                        {item.userName || 'Anonymous Donor'}
                                     </p>
                                 </div>
                             </div>
@@ -220,11 +220,11 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-500">Contact</p>
-                                            <p className="text-sm font-semibold text-gray-900">{item.donorContact}</p>
+                                            <p className="text-sm font-semibold text-gray-900">{item.mobileNumber}</p>
                                         </div>
                                     </div>
                                     <a
-                                        href={`tel:${item.donorContact}`}
+                                        href={`tel:${item.mobileNumber}`}
                                         className="px-4 py-2 bg-[#FF8B77] text-white text-sm font-semibold rounded-full hover:bg-[#FF7A66] transition-colors duration-200"
                                     >
                                         Call

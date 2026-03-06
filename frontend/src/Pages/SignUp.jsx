@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Gradient from "../component/Gradient";
-import { signUpSendOtp, signUpVerify } from "../api/auth";
+import { signUpSendOtp, signUpVerify, saveSession } from "../api/auth";
 
 const gradientProps = {
     color1: "#faaca2",
@@ -83,9 +83,8 @@ const SignUp = () => {
         setLoading(true);
         try {
             const res = await signUpVerify(emailId.trim(), otp.trim());
-            // Persist user in localStorage
-            localStorage.setItem("user", JSON.stringify(res.data));
-            navigate("/");
+            saveSession(res.data);
+            navigate("/home");
         } catch (err) {
             setError(err.message);
         } finally {

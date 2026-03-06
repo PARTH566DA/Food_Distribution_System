@@ -21,8 +21,9 @@ public interface FoodListingRepository extends JpaRepository<FoodListing, Long> 
 
     List<FoodListing> findByTargetZoneNeedyZoneId(Long zoneId);
 
-    @Query(value = "SELECT * FROM food_listings f WHERE f.status = :status ORDER BY DATE_ADD(f.created_at, INTERVAL f.fresh_hours HOUR) ASC", nativeQuery = true)
-    Page<FoodListing> findByStatusOrderByExpiryAsc(@Param("status") String status, Pageable pageable);
+    @Query(value = "SELECT f FROM FoodListing f LEFT JOIN FETCH f.user WHERE f.status = :status ORDER BY f.createdAt ASC",
+           countQuery = "SELECT COUNT(f) FROM FoodListing f WHERE f.status = :status")
+    Page<FoodListing> findByStatusWithUser(@Param("status") Status status, Pageable pageable);
 
     @Modifying
     @Query(value = "UPDATE food_listings SET status = 'EXPIRED' WHERE status = 'OPEN' AND DATE_ADD(created_at, INTERVAL fresh_hours HOUR) <= NOW()", nativeQuery = true)

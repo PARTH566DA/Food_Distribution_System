@@ -6,6 +6,8 @@ import com.example.backend.dto.FoodListingDTO;
 import com.example.backend.dto.FoodPageResponse;
 import com.example.backend.model.FoodListing;
 import com.example.backend.service.FoodListingService;
+import com.example.backend.service.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class FoodListingController {
 
     private final FoodListingService foodListingService;
+    private final JwtService jwtService;
 
     /**
      * Get paginated food listings
@@ -123,10 +126,17 @@ public class FoodListingController {
             @RequestParam("location") String location,
             @RequestParam("latitude") Double latitude,
             @RequestParam("longitude") Double longitude,
-            @RequestParam(value = "userId", required = false) Long userId,
-            @RequestParam(value = "image", required = false) MultipartFile image
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            HttpServletRequest request
     ) {
         try {
+            // Extract userId from the JWT token — more reliable than a client-supplied param
+            Long userId = null;
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                userId = jwtService.extractUserId(authHeader.substring(7));
+            }
+
             FoodListing foodListing = foodListingService.addFoodListing(
                     vegetarian, packed, description, quantity, expiryTime,
                     location, latitude, longitude, image, userId

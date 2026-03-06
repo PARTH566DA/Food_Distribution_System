@@ -1,3 +1,5 @@
+import { authHeader } from './auth';
+
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -7,6 +9,7 @@ const apiClient = async (endpoint, options = {}) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
+        ...authHeader(),
         ...options.headers,
       },
       ...options,
@@ -94,11 +97,11 @@ export const addFood = async (formData) => {
     if (formData.image) {
       body.append('image', formData.image);
     }
-    // Optionally attach userId if auth is available
-    // body.append('userId', userId);
+    // userId is now extracted server-side from the JWT token
 
     const response = await fetch(`${API_BASE_URL}/food`, {
       method: 'POST',
+      headers: { ...authHeader() },
       body,
       // Do NOT set Content-Type — browser sets it automatically with boundary for multipart
     });

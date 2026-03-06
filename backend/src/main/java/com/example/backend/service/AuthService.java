@@ -17,14 +17,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final JwtService jwtService;
 
     // Temporarily stores signup data awaiting OTP verification
     private final ConcurrentHashMap<String, SignUpRequest> pendingSignups = new ConcurrentHashMap<>();
 
-    public AuthService(UserRepository userRepository, OtpService otpService, EmailService emailService) {
+    public AuthService(UserRepository userRepository, OtpService otpService, EmailService emailService, JwtService jwtService) {
         this.userRepository = userRepository;
         this.otpService = otpService;
         this.emailService = emailService;
+        this.jwtService = jwtService;
     }
 
     // ── SIGN UP ──────────────────────────────────────────────────────────────
@@ -96,12 +98,18 @@ public class AuthService {
     // ── Helper ───────────────────────────────────────────────────────────────
 
     private AuthResponse toResponse(User user) {
+        String token = jwtService.generateToken(
+            user.getUserId(),
+            user.getEmailId(),
+            user.getRole().name()
+        );
         return new AuthResponse(
             user.getUserId(),
             user.getUserName(),
             user.getEmailId(),
             user.getMobileNumber(),
-            user.getRole()
+            user.getRole(),
+            token
         );
     }
 }
