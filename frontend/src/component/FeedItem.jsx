@@ -215,7 +215,15 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand })
                                     <div className="flex items-center gap-2 text-base">
                                         <img src={ClockIcon} alt="Expiry" className="w-5 h-5" />
                                         <span className="font-semibold text-black">Fresh:</span>
-                                        <span className="text-gray-700">{item.expiryTime} hrs.</span>
+                                        <span className="text-gray-700">
+                                            {(() => {
+                                                const now = new Date();
+                                                const created = new Date(item.createdAt);
+                                                const hoursElapsed = (now - created) / (1000 * 60 * 60);
+                                                const hoursRemaining = Math.max(0, item.expiryTime - hoursElapsed);
+                                                return Math.fround(hoursRemaining).toFixed(1);
+                                            })()} hrs.
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-2 text-base">
                                         <img src={PackageIcon} alt="Package" className="w-5 h-5" />

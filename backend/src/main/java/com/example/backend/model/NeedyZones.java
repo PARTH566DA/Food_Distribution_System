@@ -46,4 +46,7 @@ public class NeedyZones {
 
     @OneToMany(mappedBy = "targetZone", fetch = FetchType.LAZY)
     private List<FoodListing> targetedListings;
+
+    @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
+    private List<ZoneReport> reports;
 }

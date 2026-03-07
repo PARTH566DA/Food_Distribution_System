@@ -16,6 +16,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -39,6 +40,10 @@ public class SecurityConfig {
                 // Static uploads are public
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                // Zone map is publicly viewable; creation requires auth
+                .requestMatchers(HttpMethod.GET, "/api/zones/**").permitAll()
+                // Admin login is public; all other /api/admin/** require ADMIN role (enforced via @PreAuthorize)
+                .requestMatchers("/api/admin/login").permitAll()
                 // Everything else requires a valid JWT
                 .anyRequest().authenticated()
             )
