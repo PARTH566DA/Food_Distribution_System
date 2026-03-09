@@ -113,6 +113,36 @@ public class FoodListingController {
     }
 
     /**
+     * Cancel (delete) a food listing — only by the owner
+     * DELETE /api/food/{foodId}
+     */
+    @DeleteMapping("/{foodId}")
+    public ResponseEntity<ApiResponse<Void>> deleteFoodListing(
+            @PathVariable Long foodId,
+            HttpServletRequest request
+    ) {
+        try {
+            Long userId = null;
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                userId = jwtService.extractUserId(authHeader.substring(7));
+            }
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Unauthorized"));
+            }
+            foodListingService.deleteFoodListing(foodId, userId);
+            return ResponseEntity.ok(ApiResponse.success("Food listing cancelled successfully", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to cancel food listing: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Add a new food listing
      * POST /api/food
      */

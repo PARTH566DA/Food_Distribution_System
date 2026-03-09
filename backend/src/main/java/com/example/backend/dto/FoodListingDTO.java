@@ -31,6 +31,7 @@ public class FoodListingDTO {
     private Double pickupLongitude;
     private String donorName;
     private String donorContact;
+    private Long donorId;
 
     /**
      * Convert FoodListing entity to DTO
@@ -52,6 +53,7 @@ public class FoodListingDTO {
                 .pickupLongitude(foodListing.getPickupLongitude())
                 .donorName(foodListing.getUser() != null ? foodListing.getUser().getUserName() : null)
                 .donorContact(foodListing.getUser() != null ? foodListing.getUser().getMobileNumber() : null)
+                .donorId(foodListing.getUser() != null ? foodListing.getUser().getUserId() : null)
                 .build();
     }
 
@@ -79,6 +81,8 @@ public class FoodListingDTO {
                 return "delivered";
             case EXPIRED:
                 return "expired";
+            case CANCELLED:
+                return "cancelled";
             default:
                 return "unknown";
         }

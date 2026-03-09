@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import FeedItem from './FeedItem';
 import FoodDetailModal from './FoodDetailModal';
-import { fetchFoodPage, claimFood } from '../api/food';
+import { fetchFoodPage, claimFood, deleteFood } from '../api/food';
+import { getUser } from '../api/auth';
 
 const Feed = ({ pageSize = 5 }) => {
   const [page, setPage] = useState(0);
@@ -11,8 +12,10 @@ const Feed = ({ pageSize = 5 }) => {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
   const [claiming, setClaiming] = useState(null);
+  const [cancelling, setCancelling] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const currentUser = getUser();
   const loaderRef = useRef();
 
   // Load initial page
@@ -98,6 +101,25 @@ const Feed = ({ pageSize = 5 }) => {
     }
   };
 
+  const handleCancel = async (foodId) => {
+    if (cancelling) return;
+    setCancelling(foodId);
+    try {
+      await deleteFood(foodId);
+      setItems(prevItems =>
+        prevItems.map(item =>
+          item.id === foodId ? { ...item, status: 'cancelled' } : item
+        )
+      );
+      setExpandedId(null);
+    } catch (err) {
+      setError('Failed to cancel food listing. Please try again.');
+      console.error('Cancel error:', err);
+    } finally {
+      setCancelling(null);
+    }
+  };
+
   const handleRefresh = () => {
     setPage(0);
     setItems([]);
@@ -143,6 +165,9 @@ const Feed = ({ pageSize = 5 }) => {
             confirming={claiming === (item.id || item.foodId)}
             expanded={expandedId === (item.id || item.foodId)}
             onExpand={(id) => setExpandedId(prev => prev === id ? null : id)}
+            isOwner={currentUser && item.donorId === currentUser.userId}
+            onCancel={handleCancel}
+            cancelling={cancelling === (item.id || item.foodId)}
           />
         ))}
       </div>

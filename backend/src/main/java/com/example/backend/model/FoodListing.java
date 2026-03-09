@@ -35,7 +35,7 @@ public class FoodListing {
     private Double pickupLongitude;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status" , nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "VARCHAR(20)")
     private Status status;
 
     @Column(name = "description" , nullable = false)

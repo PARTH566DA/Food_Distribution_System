@@ -5,5 +5,6 @@ public enum Status {
     PICKED_UP,
     DELIVERED,
     ASSIGNED,
-    EXPIRED
+    EXPIRED,
+    CANCELLED
 }

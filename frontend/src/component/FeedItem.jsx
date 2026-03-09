@@ -50,7 +50,7 @@ const MapAutoFit = ({ donorPos, userPos }) => {
     return null;
 };
 
-const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand }) => {
+const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand, isOwner, onCancel, cancelling }) => {
     const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
     const [userPos, setUserPos] = useState(null);
     const [locationError, setLocationError] = useState(false);
@@ -235,7 +235,20 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand })
                                 
                                 {/* Action Button */}
                                 <div className="flex flex-col justify-end mr-[10px]">
-                                    {item.status === 'available' &&
+                                    {item.status === 'available' && isOwner && (
+                                        <button
+                                            onClick={() => onCancel?.(item.id || item.foodId)}
+                                            disabled={cancelling}
+                                            className={`relative overflow-hidden rounded-full font-semibold text-sm transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 w-[120px] h-[40px] border
+                                                ${cancelling
+                                                    ? 'opacity-50 cursor-not-allowed hover:scale-100 bg-gray-200 text-gray-500 border-gray-300'
+                                                    : 'bg-white text-red-500 border-red-300 hover:bg-red-50 hover:border-red-400 cursor-pointer'
+                                                }`}
+                                        >
+                                            {cancelling ? 'Cancelling…' : 'Cancel'}
+                                        </button>
+                                    )}
+                                    {item.status === 'available' && !isOwner &&
                                         renderAnimatedButton(
                                             handleClaimClick,
                                             isDesktop ? (expanded ? 'Close' : 'Accept') : 'Accept'
@@ -249,6 +262,11 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand })
                                     {item.status === 'expired' && (
                                         <span className="px-6 py-2 bg-red-500/20 text-red-700 text-sm font-semibold rounded-full border border-red-500/30 transition-all duration-300 hover:bg-red-500/30 hover:scale-105">
                                             Expired
+                                        </span>
+                                    )}
+                                    {item.status === 'cancelled' && (
+                                        <span className="px-6 py-2 bg-gray-200/60 text-gray-500 text-sm font-semibold rounded-full border border-gray-300/50">
+                                            Cancelled
                                         </span>
                                     )}
                                 </div>
@@ -379,7 +397,18 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand })
                                     )}
                                 </div>
 
-                                {/* Confirm Order Button */}
+                                {/* Confirm / Cancel Button */}
+                                {isOwner ? (
+                                    <button
+                                        onClick={() => onCancel?.(item.id || item.foodId)}
+                                        disabled={cancelling}
+                                        className="relative overflow-hidden w-full h-[56px] rounded-full font-bold text-lg transition-all duration-300 ease-in-out transform hover:shadow-xl active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 border border-red-300 text-red-500 bg-white hover:bg-red-50"
+                                    >
+                                        <span className="relative z-10">
+                                            {cancelling ? 'Cancelling…' : 'Cancel Listing'}
+                                        </span>
+                                    </button>
+                                ) : (
                                 <button
                                     onClick={() => onConfirm?.(item.id)}
                                     disabled={confirming}
@@ -402,6 +431,7 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand })
                                         {confirming ? 'Confirming…' : 'Confirm Order'}
                                     </span>
                                 </button>
+                                )}
                             </div>
                         </motion.div>
                     )}

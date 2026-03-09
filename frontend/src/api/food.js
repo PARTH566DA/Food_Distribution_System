@@ -122,3 +122,16 @@ export const addFood = async (formData) => {
   }
 };
 
+// Cancel (delete) a food listing owned by the current user
+export const deleteFood = async (foodId) => {
+  try {
+    const response = await apiClient(`/food/${foodId}`, { method: 'DELETE' });
+    if (response.success) {
+      return response;
+    }
+    throw new Error(response.message || 'Failed to cancel food listing');
+  } catch (error) {
+    console.error('Failed to cancel food listing:', error);
+    throw error;
+  }
+};

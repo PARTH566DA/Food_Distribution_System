@@ -42,7 +42,7 @@ public class FoodListingService {
         Pageable pageable = PageRequest.of(page, size);
         // Mark expired listings before fetching (runs in its own committed transaction)
         markExpiredListings();
-        return foodListingRepository.findByStatusWithUser(Status.OPEN, pageable);
+        return foodListingRepository.findByStatusOrderByExpiryAsc(Status.OPEN.name(), pageable);
     }
 
     /**
@@ -70,6 +70,25 @@ public class FoodListingService {
         foodListing.setStatus(Status.ASSIGNED);
 
         return foodListingRepository.save(foodListing);
+    }
+
+    /**
+     * Delete (cancel) a food listing — only the owner can cancel, and only if still OPEN
+     */
+    @Transactional
+    public void deleteFoodListing(Long foodId, Long userId) {
+        FoodListing foodListing = getFoodListingById(foodId);
+
+        if (foodListing.getUser() == null || !foodListing.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized: You can only cancel your own food listings");
+        }
+
+        if (foodListing.getStatus() != Status.OPEN) {
+            throw new RuntimeException("Cannot cancel a food listing that is no longer available");
+        }
+
+        foodListing.setStatus(Status.CANCELLED);
+        foodListingRepository.save(foodListing);
     }
 
     /**

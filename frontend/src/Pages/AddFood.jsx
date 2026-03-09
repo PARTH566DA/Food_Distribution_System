@@ -71,9 +71,10 @@ const AddFood = () => {
   };
 
   const incrementValue = (field) => {
+    const max = field === 'expiryTime' ? 120 : 50;
     setFormData(prev => ({
       ...prev,
-      [field]: prev[field] + (field === 'expiryTime' ? 0.5 : 1)
+      [field]: Math.min(max, prev[field] + (field === 'expiryTime' ? 0.5 : 1))
     }));
   };
 
@@ -88,10 +89,11 @@ const AddFood = () => {
     // Use parseInt for quantity (integers only), parseFloat for expiryTime (allows decimals)
     const numValue = field === 'quantity' ? parseInt(value) : parseFloat(value);
 
+    const max = field === 'expiryTime' ? 120 : 50;
     if (!isNaN(numValue) && numValue > 0) {
       setFormData(prev => ({
         ...prev,
-        [field]: numValue
+        [field]: Math.min(max, numValue)
       }));
     } else if (value === '') {
       // Allow empty input temporarily
@@ -354,6 +356,7 @@ const AddFood = () => {
                                   className="w-full h-full text-center text-black text-lg font-normal bg-transparent border-none outline-none"
                                   style={{ fontFamily: 'inherit', minWidth: '60px' }}
                                   min="1"
+                                  max="50"
                                   step="1"
                                 />
                               ) : (
@@ -411,6 +414,7 @@ const AddFood = () => {
                                   className="w-full h-full text-center text-black text-lg font-normal bg-transparent border-none outline-none"
                                   style={{ fontFamily: 'inherit', minWidth: '60px' }}
                                   min="0.5"
+                                  max="120"
                                   step="0.5"
                                 />
                               ) : (
