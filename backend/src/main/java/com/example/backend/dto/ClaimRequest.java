@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClaimRequest {
+    private Long userId;
     private Long volunteerId;
+    private Long needyZoneId;
 }
 

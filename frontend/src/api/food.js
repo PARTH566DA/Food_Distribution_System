@@ -46,13 +46,16 @@ export const fetchFoodPage = async (page = 0, size = 5) => {
 };
 
 // Claim a food listing
-export const claimFood = async (foodId) => {
+export const claimFood = async (foodId, options = {}) => {
   try {
-    // For now, sending a hardcoded volunteerId
-    // In production, this should come from authenticated user session
+    const payload = {
+      userId: options.userId ?? options.volunteerId ?? null,
+      needyZoneId: options.needyZoneId ?? null,
+    };
+
     const response = await apiClient(`/food/${foodId}/claim`, {
       method: 'POST',
-      body: JSON.stringify({ volunteerId: 1 }),
+      body: JSON.stringify(payload),
     });
 
     if (response.success) {

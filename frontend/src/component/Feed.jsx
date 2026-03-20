@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import FeedItem from './FeedItem';
 import FoodDetailModal from './FoodDetailModal';
 import { fetchFoodPage, claimFood, deleteFood } from '../api/food';
+import { fetchAllZones } from '../api/zones';
 import { getUser } from '../api/auth';
 
 const Feed = ({ pageSize = 5 }) => {
@@ -15,8 +16,20 @@ const Feed = ({ pageSize = 5 }) => {
   const [cancelling, setCancelling] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [zonePickerId, setZonePickerId] = useState(null);
+  const [selectedZoneId, setSelectedZoneId] = useState(null);
+  const [zones, setZones] = useState([]);
+  const [zonesLoading, setZonesLoading] = useState(false);
+  const [zonesError, setZonesError] = useState('');
   const currentUser = getUser();
   const loaderRef = useRef();
+
+  const getItemId = (item) => item.id ?? item.foodId;
+
+  const toNumberOrNull = (value) => {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : null;
+  };
 
   // Load initial page
   useEffect(() => {
@@ -76,23 +89,66 @@ const Feed = ({ pageSize = 5 }) => {
     setSelectedItem(item);
   };
 
-  const handleClaim = async (foodId) => {
+  const loadZones = async () => {
+    if (zonesLoading || zones.length > 0) return;
+
+    setZonesLoading(true);
+    setZonesError('');
+    try {
+      const allZones = await fetchAllZones();
+      const activeZones = (allZones || [])
+        .filter((zone) => zone?.status === 'ACTIVE')
+        .map((zone) => ({
+          ...zone,
+          needyZoneId: Number(zone.needyZoneId),
+          latitude: toNumberOrNull(zone.latitude),
+          longitude: toNumberOrNull(zone.longitude),
+        }))
+        .filter((zone) => Number.isFinite(zone.needyZoneId));
+      setZones(activeZones);
+    } catch (err) {
+      setZonesError('Failed to load needy zones. You can still continue without selecting one.');
+    } finally {
+      setZonesLoading(false);
+    }
+  };
+
+  const handleStartZoneSelection = (itemOrId) => {
+    const foodId = typeof itemOrId === 'object' ? getItemId(itemOrId) : itemOrId;
+    setSelectedItem(null);
+    setExpandedId(foodId);
+    setZonePickerId(foodId);
+    setSelectedZoneId(null);
+    loadZones();
+  };
+
+  const handleClaim = async (foodId, claimOptions = {}) => {
     if (claiming) return;
 
     setClaiming(foodId);
     try {
-      await claimFood(foodId);
+      await claimFood(foodId, {
+        userId: currentUser?.userId,
+        needyZoneId: claimOptions.needyZoneId ?? null,
+      });
       
       // Update the item status locally
       setItems(prevItems =>
         prevItems.map(item =>
-          item.id === foodId 
+          getItemId(item) === foodId
             ? { ...item, status: 'claimed' }
             : item
         )
       );
+
+      if (claimOptions.routeUrl) {
+        window.open(claimOptions.routeUrl, '_blank', 'noopener,noreferrer');
+      }
+
       setSelectedItem(null);
       setExpandedId(null);
+      setZonePickerId(null);
+      setSelectedZoneId(null);
     } catch (err) {
       setError('Failed to claim food item. Please try again.');
       console.error('Claim error:', err);
@@ -108,7 +164,7 @@ const Feed = ({ pageSize = 5 }) => {
       await deleteFood(foodId);
       setItems(prevItems =>
         prevItems.map(item =>
-          item.id === foodId ? { ...item, status: 'cancelled' } : item
+          getItemId(item) === foodId ? { ...item, status: 'cancelled' } : item
         )
       );
       setExpandedId(null);
@@ -126,6 +182,11 @@ const Feed = ({ pageSize = 5 }) => {
     setHasMore(true);
     setError(null);
     loadPage(0, true);
+  };
+
+  const handleCloseZonePicker = () => {
+    setZonePickerId(null);
+    setSelectedZoneId(null);
   };
 
   if (error && items.length === 0) {
@@ -158,16 +219,24 @@ const Feed = ({ pageSize = 5 }) => {
       <div className="space-y-4">
         {items.filter(item => item.status === 'available').map((item) => (
           <FeedItem
-            key={item.id || item.foodId}
+            key={getItemId(item)}
             item={item}
             onAccept={handleAccept}
-            onConfirm={handleClaim}
-            confirming={claiming === (item.id || item.foodId)}
-            expanded={expandedId === (item.id || item.foodId)}
+            confirming={claiming === getItemId(item)}
+            expanded={expandedId === getItemId(item)}
             onExpand={(id) => setExpandedId(prev => prev === id ? null : id)}
             isOwner={currentUser && item.donorId === currentUser.userId}
             onCancel={handleCancel}
-            cancelling={cancelling === (item.id || item.foodId)}
+            cancelling={cancelling === getItemId(item)}
+            showZonePicker={zonePickerId === getItemId(item)}
+            zones={zones}
+            zonesLoading={zonesLoading}
+            zonesError={zonesError}
+            selectedZoneId={selectedZoneId}
+            onSelectZone={setSelectedZoneId}
+            onStartZoneSelection={handleStartZoneSelection}
+            onConfirmWithZone={(foodId, options) => handleClaim(foodId, options)}
+            onCloseZonePicker={handleCloseZonePicker}
           />
         ))}
       </div>
@@ -229,11 +298,11 @@ const Feed = ({ pageSize = 5 }) => {
       <AnimatePresence>
         {selectedItem && (
           <FoodDetailModal
-            key={selectedItem.id}
+            key={getItemId(selectedItem)}
             item={selectedItem}
             onClose={() => setSelectedItem(null)}
-            onConfirm={handleClaim}
-            confirming={claiming === selectedItem.id}
+            onConfirm={handleStartZoneSelection}
+            confirming={claiming === getItemId(selectedItem)}
           />
         )}
       </AnimatePresence>

@@ -35,7 +35,7 @@ public class NeedyZoneDTO {
                 .name(zone.getName())
                 .latitude(zone.getLatitude())
                 .longitude(zone.getLongitude())
-                .status(zone.getStatus().name())
+                .status(zone.getStatus() != null ? zone.getStatus().name() : null)
                 .createdAt(zone.getCreatedAt())
                 .createdByName(zone.getCreatedBy() != null ? zone.getCreatedBy().getUserName() : "Unknown")
                 .reportCount(reportCount)

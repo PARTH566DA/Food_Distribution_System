@@ -88,14 +88,30 @@ public class FoodListingController {
     @PostMapping("/{foodId}/claim")
     public ResponseEntity<ApiResponse<FoodListingDTO>> claimFood(
             @PathVariable Long foodId,
-            @RequestBody ClaimRequest request
+            @RequestBody(required = false) ClaimRequest request,
+            HttpServletRequest httpRequest
     ) {
         try {
-            // For now, we'll use volunteerId from request body
-            // In production, this should come from the authenticated user's session
-            Long volunteerId = request.getVolunteerId() != null ? request.getVolunteerId() : 1L;
+            Long volunteerId = null;
+            Long needyZoneId = null;
 
-            FoodListing claimedFood = foodListingService.claimFoodListing(foodId, volunteerId);
+            if (request != null) {
+                volunteerId = request.getUserId() != null ? request.getUserId() : request.getVolunteerId();
+                needyZoneId = request.getNeedyZoneId();
+            }
+
+            String authHeader = httpRequest.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                volunteerId = jwtService.extractUserId(authHeader.substring(7));
+            }
+
+            if (volunteerId == null) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Volunteer identity is required"));
+            }
+
+            FoodListing claimedFood = foodListingService.claimFoodListing(foodId, volunteerId, needyZoneId);
             FoodListingDTO dto = FoodListingDTO.fromEntity(claimedFood);
 
             return ResponseEntity.ok(

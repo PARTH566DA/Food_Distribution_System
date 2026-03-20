@@ -50,7 +50,25 @@ const MapAutoFit = ({ donorPos, userPos }) => {
     return null;
 };
 
-const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand, isOwner, onCancel, cancelling }) => {
+const FeedItem = ({
+    item,
+    onAccept,
+    confirming,
+    expanded,
+    onExpand,
+    isOwner,
+    onCancel,
+    cancelling,
+    showZonePicker,
+    zones,
+    zonesLoading,
+    zonesError,
+    selectedZoneId,
+    onSelectZone,
+    onStartZoneSelection,
+    onConfirmWithZone,
+    onCloseZonePicker,
+}) => {
     const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
     const [userPos, setUserPos] = useState(null);
     const [locationError, setLocationError] = useState(false);
@@ -62,21 +80,31 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand, i
         return () => window.removeEventListener('resize', handler);
     }, []);
 
-    // Fetch geolocation when card expands on desktop
+    // Fetch geolocation when card expands or zone picker is active
     useEffect(() => {
-        if (!expanded) return;
+        if (!expanded && !showZonePicker) return;
         if (!navigator.geolocation) { setLocationError(true); return; }
         navigator.geolocation.getCurrentPosition(
             (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
             () => setLocationError(true),
             { timeout: 8000 }
         );
-    }, [expanded]);
+    }, [expanded, showZonePicker]);
 
     const donorPos =
         item.pickupLatitude && item.pickupLongitude
             ? [item.pickupLatitude, item.pickupLongitude]
             : null;
+
+    const toNumberOrNull = (value) => {
+        const numericValue = Number(value);
+        return Number.isFinite(numericValue) ? numericValue : null;
+    };
+
+    const formatCoordinate = (value) => {
+        const numericValue = toNumberOrNull(value);
+        return numericValue == null ? 'N/A' : numericValue.toFixed(5);
+    };
 
     const directionsUrl = () => {
         const dest = donorPos
@@ -84,6 +112,27 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand, i
             : encodeURIComponent(item.address || '');
         if (userPos) return `https://www.google.com/maps/dir/${userPos[0]},${userPos[1]}/${dest}`;
         return `https://www.google.com/maps/search/?api=1&query=${dest}`;
+    };
+
+    const getRouteUrl = (selectedZone) => {
+        const zoneLat = toNumberOrNull(selectedZone?.latitude);
+        const zoneLng = toNumberOrNull(selectedZone?.longitude);
+
+        if (zoneLat != null && zoneLng != null) {
+            const zonePos = `${zoneLat},${zoneLng}`;
+            if (userPos && donorPos) {
+                return `https://www.google.com/maps/dir/${userPos[0]},${userPos[1]}/${donorPos[0]},${donorPos[1]}/${zonePos}`;
+            }
+            if (donorPos) {
+                return `https://www.google.com/maps/dir/${donorPos[0]},${donorPos[1]}/${zonePos}`;
+            }
+            if (userPos) {
+                return `https://www.google.com/maps/dir/${userPos[0]},${userPos[1]}/${zonePos}`;
+            }
+            return `https://www.google.com/maps/search/?api=1&query=${zonePos}`;
+        }
+
+        return directionsUrl();
     };
 
     const formatTimeAgo = (dateString) => {
@@ -152,6 +201,19 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand, i
         } else {
             onAccept?.(item);
         }
+    };
+
+    const handleStartZonePicker = () => {
+        onStartZoneSelection?.(item);
+    };
+
+    const handleConfirmZone = () => {
+        if (zonesLoading) return;
+        const selectedZone = zones?.find((zone) => zone.needyZoneId === selectedZoneId);
+        onConfirmWithZone?.(item.id || item.foodId, {
+            needyZoneId: selectedZoneId ?? null,
+            routeUrl: selectedZoneId == null ? null : getRouteUrl(selectedZone),
+        });
     };
 
     return (
@@ -410,7 +472,7 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand, i
                                     </button>
                                 ) : (
                                 <button
-                                    onClick={() => onConfirm?.(item.id)}
+                                    onClick={handleStartZonePicker}
                                     disabled={confirming}
                                     className="relative overflow-hidden w-full h-[56px] rounded-full font-bold text-lg text-white transition-all duration-300 ease-in-out transform hover:shadow-xl active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                                     style={{
@@ -436,6 +498,88 @@ const FeedItem = ({ item, onAccept, onConfirm, confirming, expanded, onExpand, i
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {showZonePicker && item.status === 'available' && !isOwner && (
+                    <div className="mt-4 w-full rounded-[20px] bg-white border border-[#FFE0DB] p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-base font-bold text-gray-900">Select Needy Zone (Optional)</h4>
+                            <button
+                                type="button"
+                                onClick={onCloseZonePicker}
+                                className="text-xs font-semibold text-[#FF8B77] hover:text-[#FF6B55]"
+                            >
+                                Close
+                            </button>
+                        </div>
+
+                        <label className="flex items-center gap-3 mb-2 p-3 rounded-[12px] border border-[#FFE0DB] cursor-pointer hover:bg-[#FFF7F6]">
+                            <input
+                                type="radio"
+                                name={`needyZone-${item.id || item.foodId}`}
+                                checked={selectedZoneId == null}
+                                onChange={() => onSelectZone?.(null)}
+                                className="accent-[#FF8B77]"
+                            />
+                            <div>
+                                <p className="text-sm font-semibold text-gray-900">Skip zone selection</p>
+                                <p className="text-xs text-gray-500">Continue without a needy zone.</p>
+                            </div>
+                        </label>
+
+                        {zonesLoading && (
+                            <p className="text-sm text-gray-500 mt-2">Loading needy zones...</p>
+                        )}
+
+                        {zonesError && (
+                            <p className="text-xs text-orange-500 mt-2">{zonesError}</p>
+                        )}
+
+                        {!zonesLoading && zones?.length === 0 && !zonesError && (
+                            <p className="text-sm text-gray-500 mt-2">No active needy zones available right now.</p>
+                        )}
+
+                        {!zonesLoading && zones?.length > 0 && (
+                            <div className="mt-3 max-h-[180px] overflow-y-auto pr-1 space-y-2">
+                                {zones.map((zone) => (
+                                    <label
+                                        key={zone.needyZoneId}
+                                        className="flex items-start gap-3 p-3 rounded-[12px] border border-[#FFE0DB] cursor-pointer hover:bg-[#FFF7F6]"
+                                    >
+                                        <input
+                                            type="radio"
+                                            name={`needyZone-${item.id || item.foodId}`}
+                                            checked={selectedZoneId === zone.needyZoneId}
+                                            onChange={() => onSelectZone?.(zone.needyZoneId)}
+                                            className="accent-[#FF8B77] mt-0.5"
+                                        />
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-900">{zone.name}</p>
+                                            <p className="text-xs text-gray-500">
+                                                {formatCoordinate(zone.latitude)}, {formatCoordinate(zone.longitude)}
+                                            </p>
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleConfirmZone}
+                            disabled={confirming || zonesLoading}
+                            className="mt-4 relative overflow-hidden w-full h-[52px] rounded-full font-bold text-base text-white transition-all duration-300 ease-in-out transform hover:scale-[1.01] hover:shadow-xl active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            style={{
+                                background: confirming
+                                    ? '#cd5c3f'
+                                    : 'linear-gradient(135deg, #FF8B77 0%, #FF6B55 100%)',
+                                boxShadow: confirming ? 'none' : '0 8px 24px rgba(255, 139, 119, 0.35)',
+                            }}
+                        >
+                            <span className="relative z-10">
+                                {confirming ? 'Confirming…' : zonesLoading ? 'Loading Zones…' : 'Confirm & Get Route'}
+                            </span>
+                        </button>
+                    </div>
+                )}
             </motion.div>
         </div>
     );

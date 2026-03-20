@@ -1,10 +1,18 @@
 package com.example.backend.service;
 
 import com.example.backend.model.FoodListing;
+import com.example.backend.model.FoodAssignment;
+import com.example.backend.model.NeedyZones;
 import com.example.backend.model.User;
+import com.example.backend.model.Volunteer;
 import com.example.backend.model.Enums.Status;
+import com.example.backend.model.Enums.AssignmentStatus;
+import com.example.backend.model.Enums.NeedyZoneStatus;
 import com.example.backend.repository.FoodListingRepository;
+import com.example.backend.repository.FoodAssignmentRepository;
+import com.example.backend.repository.NeedyZonesRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.VolunteerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -30,13 +39,15 @@ public class FoodListingService {
 
     private final FoodListingRepository foodListingRepository;
     private final UserRepository userRepository;
+    private final VolunteerRepository volunteerRepository;
+    private final FoodAssignmentRepository foodAssignmentRepository;
+    private final NeedyZonesRepository needyZonesRepository;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
-    /**
-     * Get paginated food listings with OPEN status sorted by remaining expiry time (soonest first)
-     */
+
+    //Get paginated food listings with OPEN status sorted by remaining expiry time (soonest first)
     @Transactional()
     public Page<FoodListing> getAvailableFoodListings(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -45,9 +56,8 @@ public class FoodListingService {
         return foodListingRepository.findByStatusOrderByExpiryAsc(Status.OPEN.name(), pageable);
     }
 
-    /**
-     * Get a specific food listing by ID
-     */
+    
+    //Get a specific food listing by ID
     @Transactional(readOnly = true)
     public FoodListing getFoodListingById(Long foodId) {
         return foodListingRepository.findById(foodId)
@@ -58,7 +68,7 @@ public class FoodListingService {
      * Claim a food listing (update status to ASSIGNED)
      */
     @Transactional
-    public FoodListing claimFoodListing(Long foodId, Long volunteerId) {
+    public FoodListing claimFoodListing(Long foodId, Long volunteerId, Long needyZoneId) {
         FoodListing foodListing = getFoodListingById(foodId);
 
         // Check if food is still available
@@ -66,8 +76,44 @@ public class FoodListingService {
             throw new RuntimeException("Food listing is no longer available");
         }
 
+        NeedyZones targetZone = null;
+        if (needyZoneId != null) {
+            targetZone = needyZonesRepository.findById(needyZoneId)
+                    .orElseThrow(() -> new RuntimeException("Needy zone not found with id: " + needyZoneId));
+            if (targetZone.getStatus() != NeedyZoneStatus.ACTIVE) {
+                throw new RuntimeException("Selected needy zone is not active");
+            }
+        }
+
         // Update status to ASSIGNED
         foodListing.setStatus(Status.ASSIGNED);
+        foodListing.setTargetZone(targetZone);
+
+        FoodAssignment assignment = foodListing.getFoodAssignment();
+        if (assignment == null) {
+            assignment = new FoodAssignment();
+            assignment.setFoodListing(foodListing);
+            assignment.setAssignedAt(LocalDateTime.now());
+            assignment.setStatus(AssignmentStatus.ASSIGNED);
+        } else {
+            assignment.setStatus(AssignmentStatus.ASSIGNED);
+            if (assignment.getAssignedAt() == null) {
+                assignment.setAssignedAt(LocalDateTime.now());
+            }
+            assignment.setAcceptedAt(null);
+        }
+
+        assignment.setVolunteer(volunteerRepository.findById(volunteerId)
+            .orElseGet(() -> {
+                User user = userRepository.findById(volunteerId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + volunteerId));
+                Volunteer volunteer = new Volunteer();
+                volunteer.setUser(user);
+                volunteer.setAvailable(true);
+                return volunteerRepository.save(volunteer);
+            }));
+
+        foodAssignmentRepository.save(assignment);
 
         return foodListingRepository.save(foodListing);
     }

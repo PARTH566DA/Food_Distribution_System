@@ -2,11 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import VegIcon from '../assets/veg-logo.png';
-import NonVegIcon from '../assets/non-veg-logo.png';
-import QuantityIcon from '../assets/Group.svg';
-import ClockIcon from '../assets/clock.svg';
-import PackageIcon from '../assets/package.svg';
 
 // Fix Leaflet default marker icons with Vite
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -63,6 +58,8 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
             ? [item.pickupLatitude, item.pickupLongitude]
             : null;
 
+    const foodId = item.id ?? item.foodId;
+
     // Request user's geolocation
     useEffect(() => {
         if (!navigator.geolocation) {
@@ -82,6 +79,10 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
             return `https://www.google.com/maps/dir/${userPos[0]},${userPos[1]}/${dest}`;
         }
         return `https://www.google.com/maps/search/?api=1&query=${dest}`;
+    };
+
+    const handleConfirmClick = () => {
+        onConfirm(foodId);
     };
 
     return (
@@ -141,63 +142,18 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                                             "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0xMiAxNkM4LjY5IDIgNSA1LjY5IDUgOWMwIDMuMzEgMy4zMSA3IDcgN3M3LTMuNjkgNy03YzAtMy4zMS0zLjY5LTctNy03eiIgZmlsbD0iI2Q1ZDdkYSIvPgo8L3N2Zz4K";
                                     }}
                                 />
-                                {/* Veg / Non-Veg badge */}
-                                <div className="absolute top-3 right-3 bg-white/90 rounded-[8px] p-1.5">
-                                    {item.vegetarian ? (
-                                        <img src={VegIcon} alt="Vegetarian" className="w-6 h-6" />
-                                    ) : (
-                                        <img src={NonVegIcon} alt="Non-Vegetarian" className="w-6 h-6" />
-                                    )}
-                                </div>
                             </div>
 
-                            {/* Title & location */}
-                            <h3 className="text-2xl font-bold text-gray-900 mb-1">{item.description}</h3>
-                            <div className="flex items-center gap-1.5 mb-4">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#797979" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                                    <circle cx="12" cy="10" r="3" />
-                                </svg>
-                                <p className="text-sm text-[#797979]">{item.address || item.location}</p>
+                            {/* Description */}
+                            <div className="mb-4">
+                                <h3 className="text-lg font-bold text-gray-900 mb-1">{item.description}</h3>
+                                <p className="text-sm text-gray-700">{item.address}</p>
                             </div>
 
-                            {/* Details row */}
-                            <div className="w-full h-[1px] bg-[#D9D9D9] mb-4" />
-                            <div className="flex justify-between items-center">
-                                <div className="flex flex-col gap-3">
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <img src={QuantityIcon} alt="Quantity" className="w-5 h-5" />
-                                        <span className="font-semibold text-black">Serve:</span>
-                                        <span className="text-gray-700">{item.quantity}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <img src={ClockIcon} alt="Expiry" className="w-5 h-5" />
-                                        <span className="font-semibold text-black">Fresh:</span>
-                                        <span className="text-gray-700">{item.expiryTime} hrs.</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <img src={PackageIcon} alt="Package" className="w-5 h-5" />
-                                        <span className="font-semibold text-black">
-                                            {item.packed ? 'Pre-Packed' : 'Not Packed'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Type badge */}
-                                <div className={`px-3 py-1.5 rounded-full text-xs font-semibold ${item.vegetarian ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                                    {item.vegetarian ? '🌱 Veg' : '🍗 Non-Veg'}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* ── Donor Section ── */}
-                        <div className="w-full rounded-[20px] bg-white border border-[#FFE0DB] p-4 mb-5">
-                            <h4 className="text-base font-bold text-gray-900 mb-3">Donor Information</h4>
-                            <div className="flex items-center gap-3 mb-3">
-                                {/* Avatar */}
-                                <div className="w-11 h-11 rounded-full bg-[#FFECEA] flex items-center justify-center flex-shrink-0">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF8B77" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                            {/* Donor Info */}
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="w-12 h-12 rounded-full bg-[#FF8B77] flex items-center justify-center">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                         <circle cx="12" cy="7" r="4" />
                                     </svg>
                                 </div>
@@ -309,7 +265,7 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
 
                         {/* ── Confirm Button ── */}
                         <button
-                            onClick={() => onConfirm(item.id)}
+                            onClick={handleConfirmClick}
                             disabled={confirming}
                             className="relative overflow-hidden w-full h-[56px] rounded-full font-bold text-lg text-white transition-all duration-300 ease-in-out transform hover:scale-[1.02] hover:shadow-xl active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                             style={{
