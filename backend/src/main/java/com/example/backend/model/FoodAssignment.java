@@ -25,6 +25,12 @@ public class FoodAssignment {
     @Column(name = "accepted_time")
     private LocalDateTime acceptedAt;
 
+    @Column(name = "picked_up_time")
+    private LocalDateTime pickedUpAt;
+
+    @Column(name = "delivered_time")
+    private LocalDateTime deliveredAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "assignment_status")
     private AssignmentStatus status;

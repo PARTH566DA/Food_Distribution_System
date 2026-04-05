@@ -37,10 +37,12 @@ const NAV_BY_ROLE = {
         { label: "Home",         href: "/home" },
         { label: "Add Food",     href: "/addfood" },
         { label: "Map", href: "/map" },
+        { label: "History",      href: "/history" },
     ],
     NGO:       [
         { label: "Home",         href: "/home" },
         { label: "Map", href: "/map" },
+        { label: "History",      href: "/history" },
     ],
     VOLUNTEER: [
         { label: "Home",         href: "/home" },
@@ -57,6 +59,7 @@ const DEFAULT_NAV = [
     { label: "Home",         href: "/home" },
     { label: "Add Food",     href: "/addfood" },
     { label: "Map", href: "/map" },
+    { label: "History",      href: "/history" },
 ];
 
 const MainLayout = ({

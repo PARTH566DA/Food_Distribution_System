@@ -19,6 +19,8 @@ public interface FoodListingRepository extends JpaRepository<FoodListing, Long> 
 
     List<FoodListing> findByUserUserId(Long userId);
 
+    List<FoodListing> findByUserUserIdOrderByCreatedAtDesc(Long userId);
+
     List<FoodListing> findByTargetZoneNeedyZoneId(Long zoneId);
 
     @Query(value = "SELECT * FROM food_listings f WHERE f.status = :status ORDER BY DATE_ADD(f.created_at, INTERVAL f.fresh_hours HOUR) ASC", nativeQuery = true)

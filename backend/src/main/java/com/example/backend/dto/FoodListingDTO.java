@@ -27,11 +27,21 @@ public class FoodListingDTO {
     private String address;
     private String expiryTime;
     private String status;
+    private String workflowStatus;
     private Double pickupLatitude;
     private Double pickupLongitude;
     private String donorName;
     private String donorContact;
     private Long donorId;
+    private Long pickedByUserId;
+    private String pickedByName;
+    private String pickedByContact;
+    private String acceptedAt;
+    private String pickedUpAt;
+    private String deliveredAt;
+    private String targetZoneName;
+    private Double targetZoneLatitude;
+    private Double targetZoneLongitude;
 
     /**
      * Convert FoodListing entity to DTO
@@ -49,11 +59,40 @@ public class FoodListingDTO {
                 .address(foodListing.getAddress())
                 .expiryTime(String.valueOf(foodListing.getExpiry()))
                 .status(mapStatus(foodListing.getStatus()))
+                .workflowStatus(foodListing.getStatus() != null
+                    ? foodListing.getStatus().name().toLowerCase()
+                    : "unknown")
                 .pickupLatitude(foodListing.getPickupLatitude())
                 .pickupLongitude(foodListing.getPickupLongitude())
                 .donorName(foodListing.getUser() != null ? foodListing.getUser().getUserName() : null)
                 .donorContact(foodListing.getUser() != null ? foodListing.getUser().getMobileNumber() : null)
                 .donorId(foodListing.getUser() != null ? foodListing.getUser().getUserId() : null)
+                .pickedByUserId(foodListing.getFoodAssignment() != null
+                    && foodListing.getFoodAssignment().getVolunteer() != null
+                    ? foodListing.getFoodAssignment().getVolunteer().getUserId()
+                    : null)
+                .pickedByName(foodListing.getFoodAssignment() != null
+                    && foodListing.getFoodAssignment().getVolunteer() != null
+                    && foodListing.getFoodAssignment().getVolunteer().getUser() != null
+                    ? foodListing.getFoodAssignment().getVolunteer().getUser().getUserName()
+                    : null)
+                .pickedByContact(foodListing.getFoodAssignment() != null
+                    && foodListing.getFoodAssignment().getVolunteer() != null
+                    && foodListing.getFoodAssignment().getVolunteer().getUser() != null
+                    ? foodListing.getFoodAssignment().getVolunteer().getUser().getMobileNumber()
+                    : null)
+                .acceptedAt(foodListing.getFoodAssignment() != null
+                    ? formatDateTime(foodListing.getFoodAssignment().getAcceptedAt())
+                    : null)
+                .pickedUpAt(foodListing.getFoodAssignment() != null
+                    ? formatDateTime(foodListing.getFoodAssignment().getPickedUpAt())
+                    : null)
+                .deliveredAt(foodListing.getFoodAssignment() != null
+                    ? formatDateTime(foodListing.getFoodAssignment().getDeliveredAt())
+                    : null)
+                .targetZoneName(foodListing.getTargetZone() != null ? foodListing.getTargetZone().getName() : null)
+                .targetZoneLatitude(foodListing.getTargetZone() != null ? foodListing.getTargetZone().getLatitude() : null)
+                .targetZoneLongitude(foodListing.getTargetZone() != null ? foodListing.getTargetZone().getLongitude() : null)
                 .build();
     }
 

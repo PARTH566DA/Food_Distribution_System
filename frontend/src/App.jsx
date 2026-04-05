@@ -8,6 +8,7 @@ import SignUp from './Pages/SignUp';
 import Login from './Pages/Login';
 import Map from './Pages/map';
 import Admin from './Pages/Admin';
+import History from './Pages/History';
 import { isAuthenticated } from './api/auth';
 
 /** Wraps routes that require a valid JWT. Redirects to /login otherwise. */
@@ -29,6 +30,7 @@ const App = () => {
         <Route path="/notification" element={<ProtectedRoute><Notification /></ProtectedRoute>} />
         <Route path="/location" element={<ProtectedRoute><LocationSelector /></ProtectedRoute>} />
         <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
+        <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
 
         {/* Admin portal – handles its own auth gate internally */}
         <Route path="/admin" element={<Admin />} />

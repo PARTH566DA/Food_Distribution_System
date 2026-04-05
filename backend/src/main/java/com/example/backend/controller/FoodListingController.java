@@ -4,6 +4,7 @@ import com.example.backend.dto.ApiResponse;
 import com.example.backend.dto.ClaimRequest;
 import com.example.backend.dto.FoodListingDTO;
 import com.example.backend.dto.FoodPageResponse;
+import com.example.backend.dto.UpdateFoodProgressRequest;
 import com.example.backend.model.FoodListing;
 import com.example.backend.service.FoodListingService;
 import com.example.backend.service.JwtService;
@@ -78,6 +79,95 @@ public class FoodListingController {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to fetch food listing: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get history of food listings posted by the current user
+     * GET /api/food/history/posted
+     */
+    @GetMapping("/history/posted")
+    public ResponseEntity<ApiResponse<List<FoodListingDTO>>> getPostedHistory(HttpServletRequest request) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Unauthorized"));
+            }
+
+            List<FoodListingDTO> items = foodListingService.getFoodListingsPostedByUser(userId)
+                    .stream()
+                    .map(FoodListingDTO::fromEntity)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(ApiResponse.success(items));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch posted history: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get history of food listings accepted by the current volunteer user
+     * GET /api/food/history/accepted
+     */
+    @GetMapping("/history/accepted")
+    public ResponseEntity<ApiResponse<List<FoodListingDTO>>> getAcceptedHistory(HttpServletRequest request) {
+        try {
+            Long userId = extractUserIdFromToken(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Unauthorized"));
+            }
+
+            List<FoodListingDTO> items = foodListingService.getFoodListingsAcceptedByVolunteer(userId)
+                    .stream()
+                    .map(FoodListingDTO::fromEntity)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(ApiResponse.success(items));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch accepted history: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Update accepted order progress by volunteer
+     * PATCH /api/food/{foodId}/progress
+     * Body: { "action": "PICKED_UP" | "DELIVERED" }
+     */
+    @PatchMapping("/{foodId}/progress")
+    public ResponseEntity<ApiResponse<FoodListingDTO>> updateAcceptedOrderProgress(
+            @PathVariable Long foodId,
+            @RequestBody UpdateFoodProgressRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        try {
+            Long volunteerUserId = extractUserIdFromToken(httpRequest);
+            if (volunteerUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Unauthorized"));
+            }
+
+            FoodListing updated = foodListingService.updateAcceptedOrderProgress(
+                    foodId,
+                    volunteerUserId,
+                    request != null ? request.getAction() : null
+            );
+
+            return ResponseEntity.ok(ApiResponse.success(
+                    "Order progress updated successfully",
+                    FoodListingDTO.fromEntity(updated)
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to update order progress: " + e.getMessage()));
         }
     }
 
@@ -196,6 +286,14 @@ public class FoodListingController {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to create food listing: " + e.getMessage()));
         }
+    }
+
+    private Long extractUserIdFromToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return jwtService.extractUserId(authHeader.substring(7));
+        }
+        return null;
     }
 }
 

@@ -138,3 +138,50 @@ export const deleteFood = async (foodId) => {
     throw error;
   }
 };
+
+// Fetch listings posted by current user (history)
+export const fetchPostedHistory = async () => {
+  try {
+    const response = await apiClient('/food/history/posted');
+    if (response.success && Array.isArray(response.data)) {
+      return response.data;
+    }
+    throw new Error('Invalid response format');
+  } catch (error) {
+    console.error('Failed to fetch posted history:', error);
+    throw error;
+  }
+};
+
+// Fetch listings accepted by current user (volunteer history)
+export const fetchAcceptedHistory = async () => {
+  try {
+    const response = await apiClient('/food/history/accepted');
+    if (response.success && Array.isArray(response.data)) {
+      return response.data;
+    }
+    throw new Error('Invalid response format');
+  } catch (error) {
+    console.error('Failed to fetch accepted history:', error);
+    throw error;
+  }
+};
+
+// Update progress for an accepted order (PICKED_UP | DELIVERED)
+export const updateAcceptedOrderProgress = async (foodId, action) => {
+  try {
+    const response = await apiClient(`/food/${foodId}/progress`, {
+      method: 'PATCH',
+      body: JSON.stringify({ action }),
+    });
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new Error(response.message || 'Failed to update order progress');
+  } catch (error) {
+    console.error('Failed to update accepted order progress:', error);
+    throw error;
+  }
+};

@@ -30,7 +30,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -64,6 +67,75 @@ public class FoodListingService {
                 .orElseThrow(() -> new RuntimeException("Food listing not found with id: " + foodId));
     }
 
+    @Transactional(readOnly = true)
+    public List<FoodListing> getFoodListingsPostedByUser(Long userId) {
+        return foodListingRepository.findByUserUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FoodListing> getFoodListingsAcceptedByVolunteer(Long volunteerUserId) {
+        return foodAssignmentRepository.findByVolunteerUserId(volunteerUserId)
+                .stream()
+                .sorted(Comparator.comparing(FoodAssignment::getAssignedAt,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .map(FoodAssignment::getFoodListing)
+                .filter(foodListing -> foodListing != null)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public FoodListing updateAcceptedOrderProgress(Long foodId, Long volunteerUserId, String action) {
+        FoodListing foodListing = getFoodListingById(foodId);
+        FoodAssignment assignment = foodListing.getFoodAssignment();
+
+        if (assignment == null || assignment.getVolunteer() == null) {
+            throw new RuntimeException("This food order is not assigned to any volunteer");
+        }
+
+        if (!assignment.getVolunteer().getUserId().equals(volunteerUserId)) {
+            throw new RuntimeException("Unauthorized: This order belongs to another volunteer");
+        }
+
+        if (action == null) {
+            throw new RuntimeException("Action is required");
+        }
+
+        String normalizedAction = action.trim().toUpperCase();
+
+        if ("PICKED_UP".equals(normalizedAction)) {
+            if (foodListing.getStatus() != Status.ASSIGNED) {
+                throw new RuntimeException("Only assigned orders can be marked as picked up");
+            }
+            foodListing.setStatus(Status.PICKED_UP);
+            assignment.setStatus(AssignmentStatus.ACCEPTED);
+            if (assignment.getAcceptedAt() == null) {
+                assignment.setAcceptedAt(LocalDateTime.now());
+            }
+            if (assignment.getPickedUpAt() == null) {
+                assignment.setPickedUpAt(LocalDateTime.now());
+            }
+            assignment.setDeliveredAt(null);
+        } else if ("DELIVERED".equals(normalizedAction)) {
+            if (foodListing.getStatus() != Status.PICKED_UP) {
+                throw new RuntimeException("Only picked up orders can be marked as delivered");
+            }
+            foodListing.setStatus(Status.DELIVERED);
+            assignment.setStatus(AssignmentStatus.ACCEPTED);
+            if (assignment.getAcceptedAt() == null) {
+                assignment.setAcceptedAt(LocalDateTime.now());
+            }
+            if (assignment.getPickedUpAt() == null) {
+                assignment.setPickedUpAt(LocalDateTime.now());
+            }
+            assignment.setDeliveredAt(LocalDateTime.now());
+        } else {
+            throw new RuntimeException("Unsupported action: " + action);
+        }
+
+        foodAssignmentRepository.save(assignment);
+        return foodListingRepository.save(foodListing);
+    }
+
     /**
      * Claim a food listing (update status to ASSIGNED)
      */
@@ -94,13 +166,18 @@ public class FoodListingService {
             assignment = new FoodAssignment();
             assignment.setFoodListing(foodListing);
             assignment.setAssignedAt(LocalDateTime.now());
+            assignment.setAcceptedAt(LocalDateTime.now());
             assignment.setStatus(AssignmentStatus.ASSIGNED);
+            assignment.setPickedUpAt(null);
+            assignment.setDeliveredAt(null);
         } else {
             assignment.setStatus(AssignmentStatus.ASSIGNED);
             if (assignment.getAssignedAt() == null) {
                 assignment.setAssignedAt(LocalDateTime.now());
             }
-            assignment.setAcceptedAt(null);
+            assignment.setAcceptedAt(LocalDateTime.now());
+            assignment.setPickedUpAt(null);
+            assignment.setDeliveredAt(null);
         }
 
         assignment.setVolunteer(volunteerRepository.findById(volunteerId)
