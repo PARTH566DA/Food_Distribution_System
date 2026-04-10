@@ -1,5 +1,16 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
+const normalizeToken = (rawToken) => {
+  if (!rawToken || typeof rawToken !== 'string') return null;
+  return rawToken.replace(/^Bearer\s+/i, '').trim() || null;
+};
+
+const decodeBase64Url = (value) => {
+  const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+  return atob(padded);
+};
+
 const post = async (endpoint, body) => {
   let res;
   try {
@@ -50,13 +61,20 @@ export const loginVerify = (emailId, otp) =>
  * @param {object} authData  The `data` field from an AuthResponse.
  */
 export const saveSession = (authData) => {
-  localStorage.setItem('token', authData.token);
+  const token = normalizeToken(
+    authData?.token
+    ?? authData?.accessToken
+    ?? authData?.jwtToken
+  );
+  if (!token) throw new Error('Login response did not include a valid token.');
+
+  localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify({
-    userId:       authData.userId,
-    userName:     authData.userName,
-    emailId:      authData.emailId,
-    mobileNumber: authData.mobileNumber,
-    role:         authData.role,
+    userId:       authData?.userId,
+    userName:     authData?.userName,
+    emailId:      authData?.emailId,
+    mobileNumber: authData?.mobileNumber,
+    role:         authData?.role,
   }));
 };
 
@@ -67,7 +85,7 @@ export const clearSession = () => {
 };
 
 /** Returns the stored JWT token or null. */
-export const getToken = () => localStorage.getItem('token');
+export const getToken = () => normalizeToken(localStorage.getItem('token'));
 
 /** Returns the stored user object or null. */
 export const getUser = () => {
@@ -81,8 +99,12 @@ export const isAuthenticated = () => {
   const token = getToken();
   if (!token) return false;
   try {
-    // Decode payload (middle part of JWT) – no library needed
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+
+    // JWT uses base64url, so normalize before decoding.
+    const payload = JSON.parse(decodeBase64Url(parts[1]));
+    if (typeof payload.exp !== 'number') return false;
     return payload.exp * 1000 > Date.now();
   } catch {
     return false;

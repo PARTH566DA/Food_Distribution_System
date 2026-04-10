@@ -84,7 +84,7 @@ const SignUp = () => {
         try {
             const res = await signUpVerify(emailId.trim(), otp.trim());
             saveSession(res.data);
-            navigate("/home");
+            navigate("/home", { replace: true });
         } catch (err) {
             setError(err.message);
         } finally {

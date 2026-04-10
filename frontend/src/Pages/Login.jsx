@@ -71,7 +71,7 @@ const Login = () => {
         try {
             const res = await loginVerify(emailId.trim(), otp.trim());
             saveSession(res.data);
-            navigate("/home");
+            navigate("/home", { replace: true });
         } catch (err) {
             setError(err.message);
         } finally {

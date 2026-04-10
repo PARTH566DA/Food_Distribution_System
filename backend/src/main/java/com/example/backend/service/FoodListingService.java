@@ -45,6 +45,7 @@ public class FoodListingService {
     private final VolunteerRepository volunteerRepository;
     private final FoodAssignmentRepository foodAssignmentRepository;
     private final NeedyZonesRepository needyZonesRepository;
+    private final NotificationService notificationService;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -101,6 +102,8 @@ public class FoodListingService {
         }
 
         String normalizedAction = action.trim().toUpperCase();
+        String ownerNotificationTitle;
+        String ownerNotificationMessage;
 
         if ("PICKED_UP".equals(normalizedAction)) {
             if (foodListing.getStatus() != Status.ASSIGNED) {
@@ -115,6 +118,8 @@ public class FoodListingService {
                 assignment.setPickedUpAt(LocalDateTime.now());
             }
             assignment.setDeliveredAt(null);
+            ownerNotificationTitle = "Food picked up";
+            ownerNotificationMessage = "Your listing " + listingRef(foodListing) + " has been picked up by " + volunteerName(assignment) + ".";
         } else if ("DELIVERED".equals(normalizedAction)) {
             if (foodListing.getStatus() != Status.PICKED_UP) {
                 throw new RuntimeException("Only picked up orders can be marked as delivered");
@@ -128,12 +133,23 @@ public class FoodListingService {
                 assignment.setPickedUpAt(LocalDateTime.now());
             }
             assignment.setDeliveredAt(LocalDateTime.now());
+            ownerNotificationTitle = "Food delivered";
+            ownerNotificationMessage = "Your listing " + listingRef(foodListing) + " has been delivered to the target zone.";
         } else {
             throw new RuntimeException("Unsupported action: " + action);
         }
 
         foodAssignmentRepository.save(assignment);
-        return foodListingRepository.save(foodListing);
+        FoodListing saved = foodListingRepository.save(foodListing);
+
+        notifyUser(
+                saved.getUser() != null ? saved.getUser().getUserId() : null,
+                "success",
+                ownerNotificationTitle,
+                ownerNotificationMessage
+        );
+
+        return saved;
     }
 
     /**
@@ -191,8 +207,23 @@ public class FoodListingService {
             }));
 
         foodAssignmentRepository.save(assignment);
+        FoodListing saved = foodListingRepository.save(foodListing);
 
-        return foodListingRepository.save(foodListing);
+        notifyUser(
+            saved.getUser() != null ? saved.getUser().getUserId() : null,
+            "success",
+            "Food accepted",
+            "Your listing " + listingRef(saved) + " was accepted by " + volunteerName(assignment) + "."
+        );
+
+        notifyUser(
+            assignment.getVolunteer() != null ? assignment.getVolunteer().getUserId() : null,
+            "location",
+            "Pickup assigned",
+            "You accepted " + listingRef(saved) + ". Please pick it up and update progress in History."
+        );
+
+        return saved;
     }
 
     /**
@@ -292,5 +323,28 @@ public class FoodListingService {
         if (count > 0) {
             log.info("Marked {} food listing(s) as EXPIRED", count);
         }
+    }
+
+    private void notifyUser(Long userId, String type, String title, String message) {
+        if (userId == null) return;
+        try {
+            notificationService.createNotification(userId, type, title, message);
+        } catch (Exception e) {
+            log.warn("Failed to create notification for user {}: {}", userId, e.getMessage());
+        }
+    }
+
+    private String listingRef(FoodListing foodListing) {
+        if (foodListing == null) return "food listing";
+        if (foodListing.getFoodId() != null) return "#" + foodListing.getFoodId();
+        return "food listing";
+    }
+
+    private String volunteerName(FoodAssignment assignment) {
+        if (assignment == null || assignment.getVolunteer() == null || assignment.getVolunteer().getUser() == null) {
+            return "a volunteer";
+        }
+        String name = assignment.getVolunteer().getUser().getUserName();
+        return (name == null || name.isBlank()) ? "a volunteer" : name;
     }
 }
