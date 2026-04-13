@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.dto.*;
 import com.example.backend.service.AuthService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -59,5 +60,19 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> loginVerify(@RequestBody VerifyOtpRequest request) {
         AuthResponse user = authService.verifyLogin(request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Login successful.", user));
+    }
+
+    /**
+     * Update authenticated user's basic profile fields.
+     * Body: { userName, mobileNumber }
+     */
+    @PatchMapping("/profile")
+    public ResponseEntity<ApiResponse<AuthResponse>> updateProfile(
+            @RequestBody UpdateProfileRequest request,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        AuthResponse updated = authService.updateProfile(email, request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Profile updated successfully.", updated));
     }
 }

@@ -34,6 +34,32 @@ const post = async (endpoint, body) => {
   return data;
 };
 
+const patchAuth = async (endpoint, body) => {
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeader(),
+      },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error('Cannot reach the server. Please make sure the backend is running.');
+  }
+
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Server error (${res.status}). Please try again.`);
+  }
+
+  if (!res.ok) throw new Error(data.message || `Error ${res.status}`);
+  return data;
+};
+
 // ── Sign Up ──────────────────────────────────────────────────────────────────
 
 /** Step 1: send OTP to email for new account */
@@ -53,6 +79,10 @@ export const loginSendOtp = (emailId) =>
 /** Step 2: verify OTP and retrieve user. Returns { data: AuthResponse } */
 export const loginVerify = (emailId, otp) =>
   post('/auth/login/verify', { emailId, otp });
+
+/** Update authenticated user's profile in backend DB. */
+export const updateProfile = (userName, mobileNumber) =>
+  patchAuth('/auth/profile', { userName, mobileNumber });
 
 // ── Session helpers ───────────────────────────────────────────────────────────
 
@@ -92,6 +122,16 @@ export const getUser = () => {
   const raw = localStorage.getItem('user');
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
+};
+
+/** Merge and persist user fields in localStorage. Returns updated user or null. */
+export const updateSessionUser = (patch) => {
+  const existingUser = getUser();
+  if (!existingUser) return null;
+
+  const nextUser = { ...existingUser, ...patch };
+  localStorage.setItem('user', JSON.stringify(nextUser));
+  return nextUser;
 };
 
 /** Returns true when a non-expired token is present. */

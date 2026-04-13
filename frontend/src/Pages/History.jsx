@@ -397,7 +397,7 @@ const History = () => {
 
     return (
         <MainLayout activeHref="/history">
-            <div className="mx-auto mt-[24px] mb-[12px] h-[calc(100%-24px)] w-[70%] overflow-auto rounded-[25px] bg-[#FFF8F7] border border-[#F4DDD8] p-5">
+            <div className="mx-auto mt-[24px] mb-[12px] h-[calc(100%-24px)] w-[60%] overflow-auto rounded-[25px] bg-[#FFF8F7] border border-[#F4DDD8] p-5">
                 <GlassSurface
                     width="100%"
                     height="auto"

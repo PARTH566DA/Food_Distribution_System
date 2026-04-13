@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Gradient from "../component/Gradient";
 import GlassSurface from "../component/GlassSurface";
 import PillNav from "../component/PillNav";
 import { clearSession, getUser } from "../api/auth";
 import Notification from "../Pages/Notification";
+import Profile from "../Pages/Profile";
 
 const defaultGradientProps = {
     color1: "#faaca2",
@@ -68,9 +69,12 @@ const MainLayout = ({
     activeHref = "/",
 }) => {
     const navigate = useNavigate();
-    const user = getUser();
-    const navItems = (user && NAV_BY_ROLE[user.role]) || DEFAULT_NAV;
+    const [currentUser, setCurrentUser] = useState(getUser());
+    const navItems = (currentUser && NAV_BY_ROLE[currentUser.role]) || DEFAULT_NAV;
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const notificationPanelRef = useRef(null);
+    const profilePanelRef = useRef(null);
 
     const handleLogout = () => {
         clearSession();
@@ -78,8 +82,29 @@ const MainLayout = ({
     };
 
     const toggleNotification = () => {
+        setIsProfileOpen(false);
         setIsNotificationOpen(!isNotificationOpen);
     };
+
+    const toggleProfile = () => {
+        setIsNotificationOpen(false);
+        setIsProfileOpen(!isProfileOpen);
+    };
+
+    useEffect(() => {
+        if (!isNotificationOpen && !isProfileOpen) return;
+
+        const handleOutsideClick = (event) => {
+            const clickedInsideNotification = notificationPanelRef.current?.contains(event.target);
+            const clickedInsideProfile = profilePanelRef.current?.contains(event.target);
+            if (clickedInsideNotification || clickedInsideProfile) return;
+            setIsNotificationOpen(false);
+            setIsProfileOpen(false);
+        };
+
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }, [isNotificationOpen, isProfileOpen]);
 
     return (
         <div className="relative h-screen w-full overflow-hidden bg-white">
@@ -114,18 +139,19 @@ const MainLayout = ({
                 </header>
 
                 {/* Main Content Area */}
-                <main className={`mt-[64px] flex-1 overflow-auto rounded-3xl transition-opacity duration-300 ${isNotificationOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <main className={`mt-[64px] flex-1 overflow-auto rounded-3xl transition-opacity duration-300 ${isNotificationOpen || isProfileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     {children}
                 </main>
 
                 {/* Notification Button / Panel */}
-                {user && (
+                {currentUser && (
                     <div
+                        ref={notificationPanelRef}
                         className={`
                             fixed z-40 bg-[#FFECEA] rounded-[25px] shadow-lg
                             transition-all duration-500 ease-in-out
                             ${isNotificationOpen 
-                                ? 'left-[12px] right-[12px] top-[105px] bottom-[12px]' 
+                                ? 'left-1/2 top-[105px] bottom-[12px] w-[92%] -translate-x-1/2 md:w-[60%]' 
                                 : 'bottom-[90px] left-5 w-12 h-12'
                             }
                         `}
@@ -183,23 +209,41 @@ const MainLayout = ({
                     </div>
                 )}
 
+                {currentUser && isProfileOpen && (
+                    <div
+                        ref={profilePanelRef}
+                        className="fixed z-40 bg-[#FFECEA] rounded-[25px] shadow-lg left-1/2 top-[105px] bottom-[12px] w-[92%] -translate-x-1/2 md:w-[60%]"
+                    >
+                        <Profile
+                            user={currentUser}
+                            onClose={() => setIsProfileOpen(false)}
+                            onLogout={handleLogout}
+                            onProfileSaved={setCurrentUser}
+                        />
+                    </div>
+                )}
+
                 {/* Floating profile + logout – bottom-left */}
-                {user && (
-                    <div className="absolute bottom-5 left-5 z-30 flex items-center gap-2 bg-[#FFECEA] rounded-2xl px-4 py-3 shadow-md">
+                {currentUser && (
+                    <button
+                        type="button"
+                        onClick={toggleProfile}
+                        className="absolute bottom-5 left-5 z-30 flex items-center gap-2 bg-[#FFECEA] rounded-2xl px-4 py-3 shadow-md hover:bg-[#FED0CB] transition-colors"
+                    >
                         {/* Avatar circle */}
                         <div className="w-8 h-8 rounded-full bg-[#FED0CB] flex items-center justify-center shrink-0">
                             <span className="text-sm font-bold text-[#FF8B77]">
-                                {user.userName.charAt(0).toUpperCase()}
+                                {currentUser.userName.charAt(0).toUpperCase()}
                             </span>
                         </div>
 
                         {/* Name + role */}
                         <div className="flex flex-col leading-tight">
                             <span className="text-xs font-semibold text-[#6B5454] max-w-[110px] truncate">
-                                {user.userName}
+                                {currentUser.userName}
                             </span>
                             <span className="text-[10px] text-[#C0ABA6]">
-                                {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
+                                {currentUser.role.charAt(0) + currentUser.role.slice(1).toLowerCase()}
                             </span>
                         </div>
 
@@ -213,7 +257,8 @@ const MainLayout = ({
                         >
                             Logout
                         </button>
-                    </div>
+
+                    </button>
                 )}
             </div>
         </div>

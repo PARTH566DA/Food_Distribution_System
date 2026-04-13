@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.dto.AuthResponse;
 import com.example.backend.dto.SignUpRequest;
+import com.example.backend.dto.UpdateProfileRequest;
 import com.example.backend.dto.VerifyOtpRequest;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
@@ -93,6 +94,41 @@ public class AuthService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
 
         return toResponse(user);
+    }
+
+    public AuthResponse updateProfile(String email, UpdateProfileRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Profile payload is required.");
+        }
+
+        String normalizedEmail = email.toLowerCase().trim();
+        User user = userRepository.findByEmailId(normalizedEmail)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+
+        String nextName = request.getUserName() == null ? "" : request.getUserName().trim();
+        if (nextName.length() < 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name must be at least 2 characters.");
+        }
+
+        String rawMobile = request.getMobileNumber() == null ? "" : request.getMobileNumber();
+        String nextMobile = rawMobile.replaceAll("\\D", "");
+        if (nextMobile.length() < 10 || nextMobile.length() > 15) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mobile number should be between 10 and 15 digits.");
+        }
+
+        if (!nextMobile.equals(user.getMobileNumber())) {
+            userRepository.findByMobileNumber(nextMobile).ifPresent(existing -> {
+                if (!existing.getUserId().equals(user.getUserId())) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Mobile number is already registered.");
+                }
+            });
+        }
+
+        user.setUserName(nextName);
+        user.setMobileNumber(nextMobile);
+
+        User saved = userRepository.save(user);
+        return toResponse(saved);
     }
 
     // ── Helper ───────────────────────────────────────────────────────────────
