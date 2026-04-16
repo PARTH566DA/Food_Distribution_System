@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Gradient from "../component/Gradient";
-import { loginSendOtp, loginVerify, saveSession } from "../api/auth";
+import { loginSendOtp, loginVerify, requestAndStoreCurrentLocation, saveSession } from "../api/auth";
 
 const gradientProps = {
     color1: "#faaca2",
@@ -71,6 +71,7 @@ const Login = () => {
         try {
             const res = await loginVerify(emailId.trim(), otp.trim());
             saveSession(res.data);
+            await requestAndStoreCurrentLocation();
             navigate("/home", { replace: true });
         } catch (err) {
             setError(err.message);

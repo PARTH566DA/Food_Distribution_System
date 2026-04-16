@@ -4,10 +4,8 @@ import Feed from "../component/Feed";
 const Home = () => {
   return (
     <MainLayout activeHref="/home">
-      <div className="flex h-full overflow-auto w-full items-start justify-center py-6">
-        <div className="w-[60%] max-w-4xl">
-          <Feed />
-        </div>
+      <div className="mx-auto mt-[24px] mb-[12px] h-[calc(100%-24px)] w-[60%] max-w-4xl overflow-auto rounded-[25px]">
+        <Feed />
       </div>
     </MainLayout>
   );

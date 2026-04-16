@@ -2,9 +2,39 @@ import { useEffect, useState, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import FeedItem from './FeedItem';
 import FoodDetailModal from './FoodDetailModal';
+import GlassSurface from './GlassSurface';
 import { fetchFoodPage, claimFood, deleteFood } from '../api/food';
 import { fetchAllZones } from '../api/zones';
-import { getUser } from '../api/auth';
+import { getUser, requestAndStoreCurrentLocation } from '../api/auth';
+
+const DISTANCE_FILTERS = [
+  { value: 'all', label: 'All distances' },
+  { value: 'lt1', label: 'Under 1 km' },
+  { value: '1to3', label: '1 - 3 km' },
+  { value: '3to5', label: '3 - 5 km' },
+  { value: '5to10', label: '5 - 10 km' },
+  { value: 'gt10', label: 'Above 10 km' },
+];
+
+const haversineDistanceKm = (fromPos, toPos) => {
+  if (!fromPos || !toPos) return null;
+
+  const toRadians = (degrees) => (degrees * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const [lat1, lon1] = fromPos;
+  const [lat2, lon2] = toPos;
+
+  const latDelta = toRadians(lat2 - lat1);
+  const lonDelta = toRadians(lon2 - lon1);
+
+  const a =
+    Math.sin(latDelta / 2) * Math.sin(latDelta / 2)
+    + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2))
+    * Math.sin(lonDelta / 2) * Math.sin(lonDelta / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+};
 
 const Feed = ({ pageSize = 5 }) => {
   const [page, setPage] = useState(0);
@@ -21,14 +51,51 @@ const Feed = ({ pageSize = 5 }) => {
   const [zones, setZones] = useState([]);
   const [zonesLoading, setZonesLoading] = useState(false);
   const [zonesError, setZonesError] = useState('');
-  const currentUser = getUser();
+  const [distanceFilter, setDistanceFilter] = useState('all');
+  const [currentUser, setCurrentUser] = useState(() => getUser());
+  const [requestingLocation, setRequestingLocation] = useState(false);
+  const [locationPromptMessage, setLocationPromptMessage] = useState('');
+
+  const toNumberOrNull = (value) => {
+    if (value == null) return null;
+    if (typeof value === 'string') {
+      const trimmedValue = value.trim();
+      if (!trimmedValue || trimmedValue.toLowerCase() === 'null' || trimmedValue.toLowerCase() === 'undefined') {
+        return null;
+      }
+    }
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : null;
+  };
+
+  const currentLatitude = toNumberOrNull(currentUser?.lastKnownLatitude);
+  const currentLongitude = toNumberOrNull(currentUser?.lastKnownLongitude);
+  const currentLocation = Number.isFinite(currentLatitude) && Number.isFinite(currentLongitude)
+    ? [currentLatitude, currentLongitude]
+    : null;
   const loaderRef = useRef();
 
   const getItemId = (item) => item.id ?? item.foodId;
 
-  const toNumberOrNull = (value) => {
-    const numericValue = Number(value);
-    return Number.isFinite(numericValue) ? numericValue : null;
+  const distanceForItemKm = (item) => {
+    if (!currentLocation) return null;
+
+    const pickupLatitude = toNumberOrNull(item?.pickupLatitude);
+    const pickupLongitude = toNumberOrNull(item?.pickupLongitude);
+    if (pickupLatitude == null || pickupLongitude == null) return null;
+
+    return haversineDistanceKm(currentLocation, [pickupLatitude, pickupLongitude]);
+  };
+
+  const isWithinRange = (distanceKm) => {
+    if (!Number.isFinite(distanceKm)) return false;
+
+    if (distanceFilter === 'lt1') return distanceKm < 1;
+    if (distanceFilter === '1to3') return distanceKm >= 1 && distanceKm <= 3;
+    if (distanceFilter === '3to5') return distanceKm > 3 && distanceKm <= 5;
+    if (distanceFilter === '5to10') return distanceKm > 5 && distanceKm <= 10;
+    if (distanceFilter === 'gt10') return distanceKm > 10;
+    return true;
   };
 
   // Load initial page
@@ -189,6 +256,30 @@ const Feed = ({ pageSize = 5 }) => {
     setSelectedZoneId(null);
   };
 
+  const handleRequestLocationPermission = async () => {
+    if (currentLocation || requestingLocation) return;
+
+    setLocationPromptMessage('');
+    setRequestingLocation(true);
+    try {
+      const result = await requestAndStoreCurrentLocation();
+      const latestUser = getUser();
+      setCurrentUser(latestUser);
+
+      if (!result?.granted) {
+        setLocationPromptMessage('Location permission denied. Please allow access and try again.');
+        return;
+      }
+    } finally {
+      setRequestingLocation(false);
+    }
+  };
+
+  const availableItems = items.filter((item) => item.status === 'available');
+  const filteredItems = distanceFilter === 'all'
+    ? availableItems
+    : availableItems.filter((item) => isWithinRange(distanceForItemKm(item)));
+
   if (error && items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -215,9 +306,68 @@ const Feed = ({ pageSize = 5 }) => {
         </div>
       )}
 
+      <GlassSurface
+        width="100%"
+        height="auto"
+        borderRadius={22}
+        backgroundOpacity={0.12}
+        blur={1}
+        saturation={1}
+        className="sticky top-0 z-40 mb-4 w-full"
+      >
+        <div className="w-full rounded-[22px] bg-transparent px-4 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold tracking-wide text-[#6B5454]">Distance Filter</p>
+              <p className="text-xs text-[#8D746E]">
+                {distanceFilter === 'all'
+                  ? `${availableItems.length} items available`
+                  : `${filteredItems.length} items match this range`}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRequestLocationPermission}
+              disabled={currentLocation || requestingLocation}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/45 bg-transparent px-3 py-1.5 text-[11px] font-semibold text-[#7D6360] transition-colors disabled:cursor-default disabled:opacity-90"
+            >
+              <span className={`h-2 w-2 rounded-full ${currentLocation ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+              {currentLocation ? 'Location ready' : requestingLocation ? 'Requesting location...' : 'Location needed (click to enable)'}
+            </button>
+          </div>
+
+          <div className="mt-3 grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {DISTANCE_FILTERS.map((filterOption) => {
+              const isActive = distanceFilter === filterOption.value;
+              return (
+                <button
+                  key={filterOption.value}
+                  type="button"
+                  onClick={() => setDistanceFilter(filterOption.value)}
+                  disabled={!currentLocation}
+                  className={`w-full rounded-full px-3 py-1.5 text-center text-xs font-semibold transition-all duration-200 ${
+                    isActive
+                      ? 'bg-[#FF8B77] text-white shadow-sm'
+                      : 'border border-white/45 bg-transparent text-[#7D6360] hover:bg-white/20'
+                  } disabled:cursor-not-allowed disabled:opacity-55`}
+                >
+                  {filterOption.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {!!locationPromptMessage && (
+            <p className="mt-2 text-xs font-medium text-[#8D746E]">
+              {locationPromptMessage}
+            </p>
+          )}
+        </div>
+      </GlassSurface>
+
       {/* Feed Items */}
       <div className="space-y-4">
-        {items.filter(item => item.status === 'available').map((item) => (
+        {filteredItems.map((item) => (
           <FeedItem
             key={getItemId(item)}
             item={item}
@@ -237,6 +387,7 @@ const Feed = ({ pageSize = 5 }) => {
             onStartZoneSelection={handleStartZoneSelection}
             onConfirmWithZone={(foodId, options) => handleClaim(foodId, options)}
             onCloseZonePicker={handleCloseZonePicker}
+            currentLocation={currentLocation}
           />
         ))}
       </div>
@@ -273,15 +424,8 @@ const Feed = ({ pageSize = 5 }) => {
         <div ref={loaderRef} className="h-10" />
       )}
 
-      {/* End of Feed */}
-      {!hasMore && items.length > 0 && (
-        <div className="flex flex-col items-center py-8 text-center">
-          <p className="text-white/50 text-sm">You've reached the end of the feed</p>
-        </div>
-      )}
-
       {/* Empty State */}
-      {!loading && items.filter(item => item.status === 'available').length === 0 && !error && (
+      {!loading && availableItems.length === 0 && !error && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <h3 className="text-white font-medium mb-2">No food items available</h3>
           <p className="text-white/60 text-sm mb-4">Check back later for new donations</p>
@@ -291,6 +435,13 @@ const Feed = ({ pageSize = 5 }) => {
           >
             Refresh
           </button>
+        </div>
+      )}
+
+      {!loading && availableItems.length > 0 && filteredItems.length === 0 && !error && (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <h3 className="text-white font-medium mb-2">No food items in this distance range</h3>
+          <p className="text-white/60 text-sm">Try another distance filter.</p>
         </div>
       )}
 

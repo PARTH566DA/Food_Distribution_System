@@ -7,6 +7,7 @@ import NonVegIcon from '../assets/non-veg-logo.png';
 import QuantityIcon from '../assets/Group.svg';
 import ClockIcon from '../assets/clock.svg';
 import PackageIcon from '../assets/package.svg';
+import PinIcon from '../assets/Pin.svg';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -68,9 +69,18 @@ const FeedItem = ({
     onStartZoneSelection,
     onConfirmWithZone,
     onCloseZonePicker,
+    currentLocation,
 }) => {
+    const isValidPosition = (position) => (
+        Array.isArray(position)
+        && position.length === 2
+        && Number.isFinite(position[0])
+        && Number.isFinite(position[1])
+    );
+
+    const normalizedCurrentLocation = isValidPosition(currentLocation) ? currentLocation : null;
     const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
-    const [userPos, setUserPos] = useState(null);
+    const [userPos, setUserPos] = useState(normalizedCurrentLocation);
     const [locationError, setLocationError] = useState(false);
 
     // Track desktop / mobile
@@ -80,26 +90,102 @@ const FeedItem = ({
         return () => window.removeEventListener('resize', handler);
     }, []);
 
+    // Keep local position in sync with validated parent location data.
+    useEffect(() => {
+        if (normalizedCurrentLocation) {
+            setUserPos(normalizedCurrentLocation);
+            setLocationError(false);
+            return;
+        }
+        setUserPos(null);
+    }, [normalizedCurrentLocation]);
+
     // Fetch geolocation when card expands or zone picker is active
     useEffect(() => {
         if (!expanded && !showZonePicker) return;
-        if (!navigator.geolocation) { setLocationError(true); return; }
+        if (normalizedCurrentLocation) return;
+        if (!navigator.geolocation) {
+            setLocationError(true);
+            setUserPos(null);
+            return;
+        }
+
+        setLocationError(false);
         navigator.geolocation.getCurrentPosition(
-            (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
-            () => setLocationError(true),
+            (pos) => {
+                const nextPosition = [pos.coords.latitude, pos.coords.longitude];
+                if (!isValidPosition(nextPosition)) {
+                    setUserPos(null);
+                    setLocationError(true);
+                    return;
+                }
+                setUserPos(nextPosition);
+                setLocationError(false);
+            },
+            () => {
+                setUserPos(null);
+                setLocationError(true);
+            },
             { timeout: 8000 }
         );
-    }, [expanded, showZonePicker]);
-
-    const donorPos =
-        item.pickupLatitude && item.pickupLongitude
-            ? [item.pickupLatitude, item.pickupLongitude]
-            : null;
+    }, [expanded, showZonePicker, normalizedCurrentLocation]);
 
     const toNumberOrNull = (value) => {
+        if (value == null) return null;
+        if (typeof value === 'string') {
+            const trimmedValue = value.trim();
+            if (!trimmedValue || trimmedValue.toLowerCase() === 'null' || trimmedValue.toLowerCase() === 'undefined') {
+                return null;
+            }
+        }
         const numericValue = Number(value);
         return Number.isFinite(numericValue) ? numericValue : null;
     };
+
+    const donorLatitude = toNumberOrNull(item.pickupLatitude);
+    const donorLongitude = toNumberOrNull(item.pickupLongitude);
+
+    const donorPos =
+        donorLatitude != null && donorLongitude != null
+            ? [donorLatitude, donorLongitude]
+            : null;
+
+    const getDistanceInKm = (fromPos, toPos) => {
+        if (!fromPos || !toPos) return null;
+
+        const toRadians = (degrees) => (degrees * Math.PI) / 180;
+        const earthRadiusKm = 6371;
+
+        const [lat1, lon1] = fromPos;
+        const [lat2, lon2] = toPos;
+
+        const latDelta = toRadians(lat2 - lat1);
+        const lonDelta = toRadians(lon2 - lon1);
+
+        const a =
+            Math.sin(latDelta / 2) * Math.sin(latDelta / 2)
+            + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2))
+            * Math.sin(lonDelta / 2) * Math.sin(lonDelta / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusKm * c;
+    };
+
+    const effectiveUserPos = isValidPosition(userPos) ? userPos : null;
+    const distanceKm = getDistanceInKm(effectiveUserPos, donorPos);
+
+    const formatDistance = (valueInKm) => {
+        if (!Number.isFinite(valueInKm)) return null;
+        if (valueInKm < 1) {
+            return `${Math.round(valueInKm * 1000)} m away`;
+        }
+        if (valueInKm < 10) {
+            return `${valueInKm.toFixed(1)} km away`;
+        }
+        return `${Math.round(valueInKm)} km away`;
+    };
+
+    const distanceLabel = formatDistance(distanceKm);
 
     const formatCoordinate = (value) => {
         const numericValue = toNumberOrNull(value);
@@ -110,7 +196,7 @@ const FeedItem = ({
         const dest = donorPos
             ? `${donorPos[0]},${donorPos[1]}`
             : encodeURIComponent(item.address || '');
-        if (userPos) return `https://www.google.com/maps/dir/${userPos[0]},${userPos[1]}/${dest}`;
+        if (effectiveUserPos) return `https://www.google.com/maps/dir/${effectiveUserPos[0]},${effectiveUserPos[1]}/${dest}`;
         return `https://www.google.com/maps/search/?api=1&query=${dest}`;
     };
 
@@ -120,14 +206,14 @@ const FeedItem = ({
 
         if (zoneLat != null && zoneLng != null) {
             const zonePos = `${zoneLat},${zoneLng}`;
-            if (userPos && donorPos) {
-                return `https://www.google.com/maps/dir/${userPos[0]},${userPos[1]}/${donorPos[0]},${donorPos[1]}/${zonePos}`;
+            if (effectiveUserPos && donorPos) {
+                return `https://www.google.com/maps/dir/${effectiveUserPos[0]},${effectiveUserPos[1]}/${donorPos[0]},${donorPos[1]}/${zonePos}`;
             }
             if (donorPos) {
                 return `https://www.google.com/maps/dir/${donorPos[0]},${donorPos[1]}/${zonePos}`;
             }
-            if (userPos) {
-                return `https://www.google.com/maps/dir/${userPos[0]},${userPos[1]}/${zonePos}`;
+            if (effectiveUserPos) {
+                return `https://www.google.com/maps/dir/${effectiveUserPos[0]},${effectiveUserPos[1]}/${zonePos}`;
             }
             return `https://www.google.com/maps/search/?api=1&query=${zonePos}`;
         }
@@ -221,8 +307,15 @@ const FeedItem = ({
             <motion.div
                 layout
                 transition={{ layout: { type: 'spring', damping: 30, stiffness: 300 } }}
-                className="w-full overflow-hidden rounded-[25px] p-[10px] bg-[#FFECEA]"
+                className="relative w-full overflow-hidden rounded-[25px] p-[10px] bg-[#FFECEA]"
             >
+                {distanceLabel && (
+                    <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+                        <img src={PinIcon} alt="Location pin" className="h-4 w-4" />
+                        <span className="text-xs font-semibold text-[#6B5454]">{distanceLabel}</span>
+                    </div>
+                )}
+
                 <div className="flex gap-[10px]">
                     {/* Food Image */}
                     <div className="w-[35%] flex-shrink-0 relative">
@@ -416,7 +509,7 @@ const FeedItem = ({
                                             <div className="w-3 h-3 rounded-full bg-[#e74c3c]" />
                                             <span className="text-xs text-gray-500">Pickup point</span>
                                         </div>
-                                        {userPos && (
+                                        {effectiveUserPos && (
                                             <div className="flex items-center gap-1.5">
                                                 <div className="w-3 h-3 rounded-full bg-[#3388ff]" />
                                                 <span className="text-xs text-gray-500">Your location</span>
@@ -444,12 +537,12 @@ const FeedItem = ({
                                                         <strong>{item.description}</strong><br />{item.address}
                                                     </Popup>
                                                 </Marker>
-                                                {userPos && (
-                                                    <Marker position={userPos} icon={userIcon}>
+                                                {effectiveUserPos && (
+                                                    <Marker position={effectiveUserPos} icon={userIcon}>
                                                         <Popup>Your location</Popup>
                                                     </Marker>
                                                 )}
-                                                <MapAutoFit donorPos={donorPos} userPos={userPos} />
+                                                <MapAutoFit donorPos={donorPos} userPos={effectiveUserPos} />
                                             </MapContainer>
                                         </div>
                                     ) : (

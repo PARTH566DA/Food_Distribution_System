@@ -105,6 +105,8 @@ export const saveSession = (authData) => {
     emailId:      authData?.emailId,
     mobileNumber: authData?.mobileNumber,
     role:         authData?.role,
+    lastKnownLatitude: typeof authData?.lastKnownLatitude === 'number' ? authData.lastKnownLatitude : null,
+    lastKnownLongitude: typeof authData?.lastKnownLongitude === 'number' ? authData.lastKnownLongitude : null,
   }));
 };
 
@@ -132,6 +134,48 @@ export const updateSessionUser = (patch) => {
   const nextUser = { ...existingUser, ...patch };
   localStorage.setItem('user', JSON.stringify(nextUser));
   return nextUser;
+};
+
+const getCurrentPosition = () => new Promise((resolve, reject) => {
+  if (!navigator.geolocation) {
+    reject(new Error('Geolocation is not supported in this browser.'));
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => resolve(pos),
+    (err) => reject(err),
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    }
+  );
+});
+
+/**
+ * Ask for current location permission and persist coordinates in session.
+ * Returns `{ granted, latitude, longitude }` so caller can optionally show UI feedback.
+ */
+export const requestAndStoreCurrentLocation = async () => {
+  try {
+    const pos = await getCurrentPosition();
+    const latitude = pos?.coords?.latitude;
+    const longitude = pos?.coords?.longitude;
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return { granted: false, latitude: null, longitude: null };
+    }
+
+    updateSessionUser({
+      lastKnownLatitude: latitude,
+      lastKnownLongitude: longitude,
+    });
+
+    return { granted: true, latitude, longitude };
+  } catch {
+    return { granted: false, latitude: null, longitude: null };
+  }
 };
 
 /** Returns true when a non-expired token is present. */
