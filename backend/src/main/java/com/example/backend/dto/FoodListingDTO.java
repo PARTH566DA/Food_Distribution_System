@@ -17,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 public class FoodListingDTO {
 
     private Long id;
+    private Long assignmentId;
     private String foodId;
     private String description;
     private String quantity;
@@ -49,6 +50,7 @@ public class FoodListingDTO {
     public static FoodListingDTO fromEntity(FoodListing foodListing) {
         return FoodListingDTO.builder()
                 .id(foodListing.getFoodId())
+            .assignmentId(foodListing.getFoodAssignment() != null ? foodListing.getFoodAssignment().getAssignmentId() : null)
                 .foodId("FOOD" + String.format("%03d", foodListing.getFoodId()))
                 .description(foodListing.getDescription())
                 .quantity(String.valueOf(foodListing.getQuantity()))

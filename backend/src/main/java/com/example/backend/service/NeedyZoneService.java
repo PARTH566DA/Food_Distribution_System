@@ -9,14 +9,17 @@ import com.example.backend.model.ZoneTag;
 import com.example.backend.model.Enums.NeedyZoneStatus;
 import com.example.backend.model.Enums.TagReason;
 import com.example.backend.repository.NeedyZonesRepository;
+import com.example.backend.repository.FoodAssignmentRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.ZoneReportRepository;
 import com.example.backend.repository.ZoneTagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,8 +30,16 @@ public class NeedyZoneService {
 
     /** Zones within this many metres are considered duplicate submissions. */
     private static final double DUPLICATE_RADIUS_METRES = 50.0;
+    private static final long PENDING_REPORT_THRESHOLD = 3L;
+    private static final long INACTIVE_REPORT_THRESHOLD = 5L;
+    private static final long ACTIVE_RECENT_DELIVERIES_THRESHOLD = 2L;
+    private static final long PENDING_INACTIVITY_DAYS = 45L;
+    private static final long INACTIVE_INACTIVITY_DAYS = 90L;
+    private static final long NO_DELIVERY_PENDING_DAYS = 45L;
+    private static final long NO_DELIVERY_INACTIVE_DAYS = 120L;
 
     private final NeedyZonesRepository needyZonesRepository;
+    private final FoodAssignmentRepository foodAssignmentRepository;
     private final UserRepository userRepository;
     private final ZoneTagRepository zoneTagRepository;
     private final ZoneReportRepository zoneReportRepository;
@@ -149,6 +160,90 @@ public class NeedyZoneService {
         zoneReportRepository.save(report);
 
         return zoneReportRepository.countByZone(zone);
+    }
+
+    /**
+     * Periodically auto-adjusts zone statuses based on quality and activity signals.
+     *
+     * Rules:
+     * 1) reports >= 5 -> INACTIVE
+     * 2) reports >= 3 -> PENDING
+     * 3) recent deliveries in last 30 days >= 2 -> ACTIVE
+     * 4) last delivery older than 90 days -> INACTIVE
+     * 5) last delivery older than 45 days -> PENDING
+     * 6) never delivered + old zone -> PENDING/INACTIVE by age
+     */
+    @Scheduled(fixedRateString = "${app.zone.automation.interval-ms:1800000}")
+    @Transactional
+    public void autoAdjustZoneStatuses() {
+        List<NeedyZones> zones = needyZonesRepository.findAll();
+        LocalDateTime now = LocalDateTime.now();
+        int changed = 0;
+
+        for (NeedyZones zone : zones) {
+            long reportCount = zoneReportRepository.countByZone(zone);
+            long recentDeliveries = foodAssignmentRepository
+                    .countByFoodListingTargetZoneNeedyZoneIdAndDeliveredAtAfter(
+                            zone.getNeedyZoneId(),
+                            now.minusDays(30)
+                    );
+            long totalDeliveries = foodAssignmentRepository
+                    .countByFoodListingTargetZoneNeedyZoneIdAndDeliveredAtIsNotNull(zone.getNeedyZoneId());
+            LocalDateTime latestDelivery = foodAssignmentRepository.findLatestDeliveredAtByZoneId(zone.getNeedyZoneId());
+
+            NeedyZoneStatus nextStatus = computeNextStatus(zone, reportCount, recentDeliveries, totalDeliveries, latestDelivery, now);
+            if (nextStatus != zone.getStatus()) {
+                zone.setStatus(nextStatus);
+                needyZonesRepository.save(zone);
+                changed++;
+            }
+        }
+
+        if (changed > 0) {
+            log.info("Zone automation updated {} zone(s)", changed);
+        }
+    }
+
+    private NeedyZoneStatus computeNextStatus(
+            NeedyZones zone,
+            long reportCount,
+            long recentDeliveries,
+            long totalDeliveries,
+            LocalDateTime latestDelivery,
+            LocalDateTime now
+    ) {
+        if (reportCount >= INACTIVE_REPORT_THRESHOLD) {
+            return NeedyZoneStatus.INACTIVE;
+        }
+
+        if (reportCount >= PENDING_REPORT_THRESHOLD) {
+            return NeedyZoneStatus.PENDING;
+        }
+
+        if (recentDeliveries >= ACTIVE_RECENT_DELIVERIES_THRESHOLD) {
+            return NeedyZoneStatus.ACTIVE;
+        }
+
+        if (latestDelivery != null) {
+            if (latestDelivery.isBefore(now.minusDays(INACTIVE_INACTIVITY_DAYS))) {
+                return NeedyZoneStatus.INACTIVE;
+            }
+            if (latestDelivery.isBefore(now.minusDays(PENDING_INACTIVITY_DAYS))) {
+                return NeedyZoneStatus.PENDING;
+            }
+            return zone.getStatus();
+        }
+
+        if (totalDeliveries == 0 && zone.getCreatedAt() != null) {
+            if (zone.getCreatedAt().isBefore(now.minusDays(NO_DELIVERY_INACTIVE_DAYS))) {
+                return NeedyZoneStatus.INACTIVE;
+            }
+            if (zone.getCreatedAt().isBefore(now.minusDays(NO_DELIVERY_PENDING_DAYS))) {
+                return NeedyZoneStatus.PENDING;
+            }
+        }
+
+        return zone.getStatus();
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────

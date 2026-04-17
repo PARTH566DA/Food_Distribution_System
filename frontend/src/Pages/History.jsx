@@ -5,6 +5,8 @@ import {
     fetchPostedHistory,
     updateAcceptedOrderProgress,
 } from "../api/food";
+import { fetchAssignmentChat, sendAssignmentChatMessage } from "../api/chat";
+import { getUser } from "../api/auth";
 import GlassSurface from "../component/GlassSurface";
 
 const TABS = {
@@ -77,6 +79,12 @@ const getProgressIndex = (status, tab) => {
 
 const isInProcess = (status) => ["open", "assigned", "picked_up"].includes(status);
 
+const toTime = (value) => {
+    if (!value) return 0;
+    const parsed = new Date(value).getTime();
+    return Number.isFinite(parsed) ? parsed : 0;
+};
+
 const haversineDistanceMeters = (lat1, lon1, lat2, lon2) => {
     const toRad = (deg) => (deg * Math.PI) / 180;
     const R = 6371000;
@@ -94,6 +102,133 @@ const toCoordinates = (lat, lng) => {
     const longitude = Number(lng);
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
     return { latitude, longitude };
+};
+
+const AssignmentChatPanel = ({ item, currentUser }) => {
+    const [messages, setMessages] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [draft, setDraft] = useState("");
+    const [sending, setSending] = useState(false);
+    const listRef = useRef(null);
+
+    useEffect(() => {
+        let mounted = true;
+        const load = async () => {
+            if (!item?.assignmentId) return;
+            setLoading(true);
+            setError("");
+            try {
+                const rows = await fetchAssignmentChat(item.assignmentId);
+                if (mounted) {
+                    setMessages(rows);
+                }
+            } catch (err) {
+                if (mounted) {
+                    setError(err?.message || "Failed to load chat.");
+                }
+            } finally {
+                if (mounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        load();
+        return () => {
+            mounted = false;
+        };
+    }, [item?.assignmentId]);
+
+    useEffect(() => {
+        if (!listRef.current) return;
+        listRef.current.scrollTop = listRef.current.scrollHeight;
+    }, [messages.length]);
+
+    const handleSend = async () => {
+        const payload = draft.trim();
+        if (!payload || sending || !item?.assignmentId) return;
+
+        setSending(true);
+        setError("");
+        try {
+            const created = await sendAssignmentChatMessage(item.assignmentId, payload);
+            setMessages((prev) => [...prev, created]);
+            setDraft("");
+        } catch (err) {
+            setError(err?.message || "Could not send message.");
+        } finally {
+            setSending(false);
+        }
+    };
+
+    return (
+        <div className="mt-3 rounded-xl border border-[#F0D9D3] bg-white/80 p-3">
+            <p className="text-xs font-semibold text-[#7A5F5A] mb-2">Assignment Chat</p>
+
+            {loading && (
+                <p className="text-xs text-[#8D746E]">Loading chat...</p>
+            )}
+
+            {!loading && (
+                <div
+                    ref={listRef}
+                    className="max-h-48 overflow-y-auto space-y-2 rounded-lg bg-[#FFF8F7] border border-[#F2E1DD] p-2"
+                >
+                    {messages.length === 0 && (
+                        <p className="text-xs text-[#9A817B]">No messages yet. Start coordinating pickup timing and gate details.</p>
+                    )}
+
+                    {messages.map((msg) => {
+                        const mine = Number(msg.senderUserId) === Number(currentUser?.userId);
+                        return (
+                            <div
+                                key={msg.messageId}
+                                className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                            >
+                                <div className={`max-w-[82%] rounded-lg px-3 py-2 text-xs ${mine ? "bg-[#FF8B77] text-white" : "bg-white border border-[#EED9D4] text-[#664F4A]"}`}>
+                                    <p className={`font-semibold mb-0.5 ${mine ? "text-white/90" : "text-[#8A7069]"}`}>
+                                        {msg.senderName || "User"}
+                                    </p>
+                                    <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                                    <p className={`mt-1 text-[10px] ${mine ? "text-white/80" : "text-[#B49790]"}`}>
+                                        {formatDate(msg.createdAt)}
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            <div className="mt-2 flex items-center gap-2">
+                <input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSend();
+                        }
+                    }}
+                    maxLength={1000}
+                    placeholder="Type message (arrival time, gate number, contact note...)"
+                    className="flex-1 rounded-full border border-[#E8D1CC] bg-white px-3 py-2 text-xs text-[#6B5454] outline-none focus:border-[#FF8B77]"
+                />
+                <button
+                    onClick={handleSend}
+                    disabled={sending || !draft.trim()}
+                    className="rounded-full bg-[#FF8B77] px-3 py-2 text-xs font-semibold text-white hover:bg-[#FF7A66] disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                    {sending ? "Sending..." : "Send"}
+                </button>
+            </div>
+
+            {error && (
+                <p className="mt-2 text-xs font-semibold text-[#A14B41]">{error}</p>
+            )}
+        </div>
+    );
 };
 
 const TimelineRow = ({ item }) => {
@@ -144,7 +279,7 @@ const TimelineRow = ({ item }) => {
     );
 };
 
-const HistoryCard = ({ item, tab, onProgressUpdate, updatingAction }) => {
+const HistoryCard = ({ item, tab, onProgressUpdate, updatingAction, currentUser, isChatOpen, onToggleChat }) => {
     const workflowStatus = normalizeWorkflowStatus(item);
     const mapUrl = buildMapUrl(item);
     const inProcess = isInProcess(workflowStatus);
@@ -153,6 +288,7 @@ const HistoryCard = ({ item, tab, onProgressUpdate, updatingAction }) => {
     const canMarkDelivered = tab === TABS.ACCEPTED && workflowStatus === "picked_up";
     const hasPickedBy = Boolean(item.pickedByName || item.pickedByContact);
     const showLifecycleInfo = Boolean(item.pickedUpAt || item.deliveredAt || hasPickedBy);
+    const canOpenChat = Boolean(item.assignmentId && item.donorId && item.pickedByUserId);
 
     return (
         <article className="rounded-[24px] bg-[#FFECEA] p-4 border border-[#F8D5CF] shadow-sm">
@@ -244,11 +380,27 @@ const HistoryCard = ({ item, tab, onProgressUpdate, updatingAction }) => {
                     </a>
                 </div>
             )}
+
+            {canOpenChat && (
+                <div className="mt-3">
+                    <button
+                        type="button"
+                        onClick={() => onToggleChat?.(item.assignmentId)}
+                        className="inline-flex items-center gap-2 rounded-full border border-[#E7D3CF] bg-white px-4 py-2 text-xs font-semibold text-[#7A5F5A] hover:bg-[#FFF3F1]"
+                    >
+                        {isChatOpen ? "Hide Chat" : "Open Chat"}
+                    </button>
+                    {isChatOpen && (
+                        <AssignmentChatPanel item={item} currentUser={currentUser} />
+                    )}
+                </div>
+            )}
         </article>
     );
 };
 
 const History = () => {
+    const [currentUser] = useState(() => getUser());
     const [activeTab, setActiveTab] = useState(TABS.POSTED);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -256,6 +408,7 @@ const History = () => {
     const [acceptedItems, setAcceptedItems] = useState([]);
     const [progressUpdatingById, setProgressUpdatingById] = useState({});
     const [toast, setToast] = useState(null);
+    const [openChatAssignmentId, setOpenChatAssignmentId] = useState(null);
     const [autoConfirmRequest, setAutoConfirmRequest] = useState(null);
     const autoAttemptedRef = useRef(new Set());
     const autoEnteredZoneRef = useRef(new Set());
@@ -294,7 +447,24 @@ const History = () => {
     }, []);
 
     const activeItems = useMemo(() => {
-        return activeTab === TABS.POSTED ? postedItems : acceptedItems;
+        const source = activeTab === TABS.POSTED ? postedItems : acceptedItems;
+
+        // Show newest entries first on History regardless of backend ordering.
+        return [...source].sort((a, b) => {
+            const aRecent = Math.max(
+                toTime(a?.createdAt),
+                toTime(a?.acceptedAt),
+                toTime(a?.pickedUpAt),
+                toTime(a?.deliveredAt)
+            );
+            const bRecent = Math.max(
+                toTime(b?.createdAt),
+                toTime(b?.acceptedAt),
+                toTime(b?.pickedUpAt),
+                toTime(b?.deliveredAt)
+            );
+            return bRecent - aRecent;
+        });
     }, [activeTab, postedItems, acceptedItems]);
 
     const handleProgressUpdate = async (item, action, options = {}) => {
@@ -457,6 +627,11 @@ const History = () => {
                                 tab={activeTab}
                                 onProgressUpdate={handleProgressUpdate}
                                 updatingAction={progressUpdatingById[item.id]}
+                                currentUser={currentUser}
+                                isChatOpen={openChatAssignmentId === item.assignmentId}
+                                onToggleChat={(assignmentId) => {
+                                    setOpenChatAssignmentId((prev) => prev === assignmentId ? null : assignmentId);
+                                }}
                             />
                         ))}
                     </div>
