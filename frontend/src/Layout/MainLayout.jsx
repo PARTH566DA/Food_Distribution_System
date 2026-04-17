@@ -32,7 +32,6 @@ const defaultGradientProps = {
     zoom: 1.65,
 };
 
-// Role-based navigation items
 const NAV_BY_ROLE = {
     CITIZEN:   [
         { label: "Home",         href: "/home" },
@@ -108,23 +107,18 @@ const MainLayout = ({
 
     return (
         <div className="relative h-screen w-full overflow-hidden bg-white">
-            {/* 1. Background Gradient */}
             <div className="absolute top-0 left-0 w-full h-full">
                 <Gradient {...defaultGradientProps} {...gradientProps} />
             </div>
 
-            {/* 2. Content Layer */}
             <div className="relative z-10 flex h-full w-full flex-col p-4">
 
-                {/* Header Area */}
                 <header className="">
-                    {/* Solid Bar background */}
                     <div className="absolute top-[12px] left-[12px] right-[12px] h-[80px]">
                         <div 
                             className="w-full h-full rounded-[25px] flex items-center justify-center px-5"
                             style={{ backgroundColor: '#FFECEA' }}
                         >
-                        {/* Centered Pill Navigation */}
                         <div className="relative z-20 flex items-center justify-center">
                             <PillNav
                                 items={navItems}
@@ -138,12 +132,10 @@ const MainLayout = ({
                     </div>
                 </header>
 
-                {/* Main Content Area */}
                 <main className={`mt-[64px] flex-1 overflow-auto rounded-3xl transition-opacity duration-300 ${isNotificationOpen || isProfileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     {children}
                 </main>
 
-                {/* Notification Button / Panel */}
                 {currentUser && (
                     <div
                         ref={notificationPanelRef}
@@ -156,7 +148,6 @@ const MainLayout = ({
                             }
                         `}
                     >
-                        {/* Notification Button (visible when collapsed) */}
                         {!isNotificationOpen && (
                             <button
                                 onClick={toggleNotification}
@@ -179,10 +170,8 @@ const MainLayout = ({
                             </button>
                         )}
 
-                        {/* Notification Panel Content (visible when expanded) */}
                         {isNotificationOpen && (
                             <div className="w-full h-full p-6 flex flex-col">
-                                {/* Header with close button */}
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-2xl font-bold text-[#6B5454]">Notifications</h2>
                                     <button
@@ -202,7 +191,6 @@ const MainLayout = ({
                                     </button>
                                 </div>
 
-                                {/* Notification List */}
                                 <Notification />
                             </div>
                         )}
@@ -223,21 +211,18 @@ const MainLayout = ({
                     </div>
                 )}
 
-                {/* Floating profile + logout – bottom-left */}
                 {currentUser && (
                     <button
                         type="button"
                         onClick={toggleProfile}
                         className="absolute bottom-5 left-5 z-30 flex items-center gap-2 bg-[#FFECEA] rounded-2xl px-4 py-3 shadow-md hover:bg-[#FED0CB] transition-colors"
                     >
-                        {/* Avatar circle */}
                         <div className="w-8 h-8 rounded-full bg-[#FED0CB] flex items-center justify-center shrink-0">
                             <span className="text-sm font-bold text-[#FF8B77]">
                                 {currentUser.userName.charAt(0).toUpperCase()}
                             </span>
                         </div>
 
-                        {/* Name + role */}
                         <div className="flex flex-col leading-tight">
                             <span className="text-xs font-semibold text-[#6B5454] max-w-[110px] truncate">
                                 {currentUser.userName}
@@ -247,10 +232,8 @@ const MainLayout = ({
                             </span>
                         </div>
 
-                        {/* Divider */}
                         <div className="w-px h-6 bg-[#D9C7C3] mx-1" />
 
-                        {/* Logout button */}
                         <button
                             onClick={handleLogout}
                             className="text-xs font-semibold text-[#9B7B75] hover:text-[#FF8B77] transition-colors"

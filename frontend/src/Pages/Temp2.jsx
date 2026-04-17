@@ -6,7 +6,6 @@ const Temp = () => {
   return (
     <div className="relative w-full h-screen overflow-hidden">
 
-      {/* Background Layer */}
       <div className="w-full h-full absolute top-0 left-0">
         <Grainient
           color1="#afafaf"
@@ -34,7 +33,6 @@ const Temp = () => {
         />
       </div>
 
-      {/* Title Bar */}
       <div className="absolute top-[12px] left-[12px] right-[12px] w-auto h-[80px]">
           <GlassSurface
             width="100%"

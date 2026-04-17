@@ -23,12 +23,10 @@ public class NeedyZoneDTO {
     private String createdByName;
     private long reportCount;
 
-    /** Convenience factory – report count defaults to 0. */
     public static NeedyZoneDTO fromEntity(NeedyZones zone) {
         return fromEntity(zone, 0L);
     }
 
-    /** Factory that includes the aggregated report count. */
     public static NeedyZoneDTO fromEntity(NeedyZones zone, long reportCount) {
         return NeedyZoneDTO.builder()
                 .needyZoneId(zone.getNeedyZoneId())

@@ -34,7 +34,7 @@ public class DeliveryProof {
     private Double deliveryLongitude;
 
     @Column(name = "photo_url")
-    private String photoUrl; // URL to stored photo (no faces)
+    private String photoUrl;
 
     @Column(name = "notes")
     private String notes;

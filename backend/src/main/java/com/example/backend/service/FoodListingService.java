@@ -51,17 +51,14 @@ public class FoodListingService {
     private String uploadDir;
 
 
-    //Get paginated food listings with OPEN status sorted by remaining expiry time (soonest first)
     @Transactional()
     public Page<FoodListing> getAvailableFoodListings(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        // Mark expired listings before fetching (runs in its own committed transaction)
         markExpiredListings();
         return foodListingRepository.findByStatusOrderByExpiryAsc(Status.OPEN.name(), pageable);
     }
 
     
-    //Get a specific food listing by ID
     @Transactional(readOnly = true)
     public FoodListing getFoodListingById(Long foodId) {
         return foodListingRepository.findById(foodId)
@@ -152,14 +149,10 @@ public class FoodListingService {
         return saved;
     }
 
-    /**
-     * Claim a food listing (update status to ASSIGNED)
-     */
     @Transactional
     public FoodListing claimFoodListing(Long foodId, Long volunteerId, Long needyZoneId) {
         FoodListing foodListing = getFoodListingById(foodId);
 
-        // Check if food is still available
         if (foodListing.getStatus() != Status.OPEN) {
             throw new RuntimeException("Food listing is no longer available");
         }
@@ -173,7 +166,6 @@ public class FoodListingService {
             }
         }
 
-        // Update status to ASSIGNED
         foodListing.setStatus(Status.ASSIGNED);
         foodListing.setTargetZone(targetZone);
 
@@ -226,9 +218,6 @@ public class FoodListingService {
         return saved;
     }
 
-    /**
-     * Delete (cancel) a food listing — only the owner can cancel, and only if still OPEN
-     */
     @Transactional
     public void deleteFoodListing(Long foodId, Long userId) {
         FoodListing foodListing = getFoodListingById(foodId);
@@ -245,9 +234,6 @@ public class FoodListingService {
         foodListingRepository.save(foodListing);
     }
 
-    /**
-     * Add a new food listing (with optional image upload)
-     */
     @Transactional
     public FoodListing addFoodListing(
             Boolean vegetarian,
@@ -272,12 +258,10 @@ public class FoodListingService {
         foodListing.setPickupLongitude(longitude);
         foodListing.setStatus(Status.OPEN);
 
-        // Attach user if provided
         if (userId != null) {
             userRepository.findById(userId).ifPresent(foodListing::setUser);
         }
 
-        // Handle image upload
         if (image != null && !image.isEmpty()) {
             String imageUrl = saveImage(image);
             foodListing.setImageUrl(imageUrl);
@@ -286,9 +270,6 @@ public class FoodListingService {
         return foodListingRepository.save(foodListing);
     }
 
-    /**
-     * Save uploaded image to local filesystem and return relative URL
-     */
     private String saveImage(MultipartFile image) {
         try {
             Path uploadPath = Paths.get(uploadDir);
@@ -311,11 +292,6 @@ public class FoodListingService {
         }
     }
 
-    /**
-     * Check and mark expired food listings.
-     * Runs every 60 seconds via scheduler, and also before each feed fetch.
-     * Uses REQUIRES_NEW so the UPDATE commits before the caller's SELECT runs.
-     */
     @Scheduled(fixedRate = 60000)
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void markExpiredListings() {

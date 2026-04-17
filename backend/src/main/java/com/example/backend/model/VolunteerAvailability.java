@@ -38,7 +38,7 @@ public class VolunteerAvailability {
     private Double currentLongitude;
 
     @Column(name = "max_distance_km")
-    private Integer maxDistanceKm; // maximum distance volunteer willing to travel
+    private Integer maxDistanceKm;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;

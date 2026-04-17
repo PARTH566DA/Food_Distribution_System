@@ -44,9 +44,6 @@ public class FoodListingDTO {
     private Double targetZoneLatitude;
     private Double targetZoneLongitude;
 
-    /**
-     * Convert FoodListing entity to DTO
-     */
     public static FoodListingDTO fromEntity(FoodListing foodListing) {
         return FoodListingDTO.builder()
                 .id(foodListing.getFoodId())
@@ -98,17 +95,11 @@ public class FoodListingDTO {
                 .build();
     }
 
-    /**
-     * Format LocalDateTime to ISO 8601 string
-     */
     private static String formatDateTime(LocalDateTime dateTime) {
         if (dateTime == null) return null;
         return dateTime.format(DateTimeFormatter.ISO_DATE_TIME);
     }
 
-    /**
-     * Map backend Status enum to frontend status strings
-     */
     private static String mapStatus(Status status) {
         if (status == null) return "unknown";
 

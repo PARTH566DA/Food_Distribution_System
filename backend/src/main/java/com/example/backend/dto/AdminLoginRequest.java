@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AdminLoginRequest {
 
-    /** The admin ID configured in application.properties (admin.id) */
     private String adminId;
 
-    /** The admin password configured in application.properties (admin.password) */
     private String password;
 }

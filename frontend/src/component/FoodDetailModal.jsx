@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-// Fix Leaflet default marker icons with Vite
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+const MotionDiv = motion.div;
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -15,7 +16,6 @@ L.Icon.Default.mergeOptions({
     shadowUrl: markerShadow,
 });
 
-// Custom icons
 const donorIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: markerShadow,
@@ -34,7 +34,6 @@ const userIcon = new L.Icon({
     shadowSize: [41, 41],
 });
 
-// Auto-fit bounds when both positions are available
 const MapAutoFit = ({ donorPos, userPos }) => {
     const map = useMap();
     useEffect(() => {
@@ -60,7 +59,6 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
 
     const foodId = item.id ?? item.foodId;
 
-    // Request user's geolocation
     useEffect(() => {
         if (!navigator.geolocation) {
             setLocationError(true);
@@ -87,8 +85,7 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
 
     return (
         <>
-            {/* Backdrop */}
-            <motion.div
+            <MotionDiv
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -97,8 +94,7 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                 onClick={onClose}
             />
 
-            {/* Modal Panel */}
-            <motion.div
+            <MotionDiv
                 initial={{ y: '100%', opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: '100%', opacity: 0 }}
@@ -107,16 +103,13 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                 style={{ maxHeight: '92vh' }}
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Drag handle */}
                 <div className="flex justify-center pt-3 pb-1">
                     <div className="w-10 h-1.5 rounded-full bg-[#D9D9D9]" />
                 </div>
 
-                {/* Scrollable content */}
                 <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: 'calc(92vh - 20px)' }}>
                     <div className="px-5 pb-10 pt-2">
 
-                        {/* Header */}
                         <div className="flex items-center gap-3 mb-5">
                             <button
                                 onClick={onClose}
@@ -129,9 +122,7 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                             <h2 className="text-xl font-bold text-gray-900">Order Details</h2>
                         </div>
 
-                        {/* ── Food Card (Expanded) ── */}
                         <div className="w-full rounded-[25px] overflow-hidden bg-[#FFECEA] p-4 mb-5">
-                            {/* Image */}
                             <div className="relative w-full rounded-[20px] overflow-hidden mb-4" style={{ aspectRatio: '16/9' }}>
                                 <img
                                     src={item.imageUrl || '/placeholder-food.jpg'}
@@ -144,13 +135,11 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                                 />
                             </div>
 
-                            {/* Description */}
                             <div className="mb-4">
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">{item.description}</h3>
                                 <p className="text-sm text-gray-700">{item.address}</p>
                             </div>
 
-                            {/* Donor Info */}
                             <div className="flex items-center gap-4 mb-4">
                                 <div className="w-12 h-12 rounded-full bg-[#FF8B77] flex items-center justify-center">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -165,7 +154,6 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                                 </div>
                             </div>
 
-                            {/* Contact */}
                             {item.donorContact ? (
                                 <div className="flex items-center justify-between bg-[#FFECEA] rounded-[14px] px-4 py-3">
                                     <div className="flex items-center gap-3">
@@ -193,7 +181,6 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                             )}
                         </div>
 
-                        {/* ── Map Section ── */}
                         <div className="w-full rounded-[20px] overflow-hidden bg-white border border-[#FFE0DB] mb-5">
                             <div className="px-4 pt-4 pb-2 flex items-center justify-between">
                                 <h4 className="text-base font-bold text-gray-900">Pickup Location</h4>
@@ -210,7 +197,6 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                                 </a>
                             </div>
 
-                            {/* Location labels */}
                             <div className="px-4 pb-3 flex gap-4">
                                 <div className="flex items-center gap-1.5">
                                     <div className="w-3 h-3 rounded-full bg-[#e74c3c]" />
@@ -227,7 +213,6 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                                 )}
                             </div>
 
-                            {/* Map */}
                             {donorPos ? (
                                 <div style={{ height: '240px', width: '100%' }}>
                                     <MapContainer
@@ -263,7 +248,6 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                             )}
                         </div>
 
-                        {/* ── Confirm Button ── */}
                         <button
                             onClick={handleConfirmClick}
                             disabled={confirming}
@@ -275,7 +259,6 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                                 boxShadow: confirming ? 'none' : '0 8px 24px rgba(255, 139, 119, 0.45)',
                             }}
                         >
-                            {/* Shimmer overlay */}
                             <span
                                 className="absolute inset-0 rounded-full"
                                 style={{
@@ -291,7 +274,7 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
 
                     </div>
                 </div>
-            </motion.div>
+            </MotionDiv>
         </>
     );
 };

@@ -6,6 +6,7 @@ import com.example.backend.service.JwtService;
 import com.example.backend.service.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Slf4j
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -24,13 +26,17 @@ public class NotificationController {
         try {
             Long userId = extractUserIdFromToken(request);
             if (userId == null) {
+                log.warn("Unauthorized notification feed request");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Unauthorized"));
             }
 
+            log.info("API get notifications userId={}", userId);
+
             NotificationFeedResponse feed = notificationService.getNotificationFeed(userId);
             return ResponseEntity.ok(ApiResponse.success(feed));
         } catch (Exception e) {
+            log.error("Failed to fetch notifications", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to fetch notifications: " + e.getMessage()));
         }
@@ -44,16 +50,21 @@ public class NotificationController {
         try {
             Long userId = extractUserIdFromToken(request);
             if (userId == null) {
+                log.warn("Unauthorized mark-as-read request notificationId={}", notificationId);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Unauthorized"));
             }
 
+            log.info("API mark notification as read userId={} notificationId={}", userId, notificationId);
+
             notificationService.markAsRead(userId, notificationId);
             return ResponseEntity.ok(ApiResponse.success("Notification marked as read", null));
         } catch (RuntimeException e) {
+            log.warn("Failed to mark notification as read notificationId={} error={}", notificationId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
+            log.error("Unexpected error while marking notification as read notificationId={}", notificationId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to mark notification as read: " + e.getMessage()));
         }
@@ -64,13 +75,17 @@ public class NotificationController {
         try {
             Long userId = extractUserIdFromToken(request);
             if (userId == null) {
+                log.warn("Unauthorized mark-all-as-read request");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Unauthorized"));
             }
 
+            log.info("API mark all notifications as read userId={}", userId);
+
             notificationService.markAllAsRead(userId);
             return ResponseEntity.ok(ApiResponse.success("All notifications marked as read", null));
         } catch (Exception e) {
+            log.error("Unexpected error while marking all notifications as read", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to mark all notifications as read: " + e.getMessage()));
         }

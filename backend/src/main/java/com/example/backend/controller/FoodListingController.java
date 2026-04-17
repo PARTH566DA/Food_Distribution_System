@@ -10,6 +10,7 @@ import com.example.backend.service.FoodListingService;
 import com.example.backend.service.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,22 +23,20 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/food")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Configure this properly in production
+@CrossOrigin(origins = "*")
+@Slf4j
 public class FoodListingController {
 
     private final FoodListingService foodListingService;
     private final JwtService jwtService;
 
-    /**
-     * Get paginated food listings
-     * GET /api/food/feed?page=0&size=5
-     */
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<FoodPageResponse>> getFoodFeed(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ) {
         try {
+            log.info("API get food feed page={} size={}", page, size);
             Page<FoodListing> foodPage = foodListingService.getAvailableFoodListings(page, size);
 
             List<FoodListingDTO> items = foodPage.getContent()
@@ -55,45 +54,44 @@ public class FoodListingController {
 
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception e) {
+            log.error("Failed to fetch food feed page={} size={}", page, size, e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to fetch food listings: " + e.getMessage()));
         }
     }
 
-    /**
-     * Get specific food listing by ID
-     * GET /api/food/{foodId}
-     */
     @GetMapping("/{foodId}")
     public ResponseEntity<ApiResponse<FoodListingDTO>> getFoodById(@PathVariable Long foodId) {
         try {
+            log.info("API get food by id foodId={}", foodId);
             FoodListing foodListing = foodListingService.getFoodListingById(foodId);
             FoodListingDTO dto = FoodListingDTO.fromEntity(foodListing);
             return ResponseEntity.ok(ApiResponse.success(dto));
         } catch (RuntimeException e) {
+            log.warn("Food listing not found or invalid foodId={} error={}", foodId, e.getMessage());
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
+            log.error("Failed to fetch food listing foodId={}", foodId, e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to fetch food listing: " + e.getMessage()));
         }
     }
 
-    /**
-     * Get history of food listings posted by the current user
-     * GET /api/food/history/posted
-     */
     @GetMapping("/history/posted")
     public ResponseEntity<ApiResponse<List<FoodListingDTO>>> getPostedHistory(HttpServletRequest request) {
         try {
             Long userId = extractUserIdFromToken(request);
             if (userId == null) {
+                log.warn("Unauthorized posted history request");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Unauthorized"));
             }
+
+            log.info("API get posted history userId={}", userId);
 
             List<FoodListingDTO> items = foodListingService.getFoodListingsPostedByUser(userId)
                     .stream()
@@ -102,24 +100,24 @@ public class FoodListingController {
 
             return ResponseEntity.ok(ApiResponse.success(items));
         } catch (Exception e) {
+            log.error("Failed to fetch posted history", e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to fetch posted history: " + e.getMessage()));
         }
     }
 
-    /**
-     * Get history of food listings accepted by the current volunteer user
-     * GET /api/food/history/accepted
-     */
     @GetMapping("/history/accepted")
     public ResponseEntity<ApiResponse<List<FoodListingDTO>>> getAcceptedHistory(HttpServletRequest request) {
         try {
             Long userId = extractUserIdFromToken(request);
             if (userId == null) {
+                log.warn("Unauthorized accepted history request");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Unauthorized"));
             }
+
+            log.info("API get accepted history userId={}", userId);
 
             List<FoodListingDTO> items = foodListingService.getFoodListingsAcceptedByVolunteer(userId)
                     .stream()
@@ -128,17 +126,13 @@ public class FoodListingController {
 
             return ResponseEntity.ok(ApiResponse.success(items));
         } catch (Exception e) {
+            log.error("Failed to fetch accepted history", e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to fetch accepted history: " + e.getMessage()));
         }
     }
 
-    /**
-     * Update accepted order progress by volunteer
-     * PATCH /api/food/{foodId}/progress
-     * Body: { "action": "PICKED_UP" | "DELIVERED" }
-     */
     @PatchMapping("/{foodId}/progress")
     public ResponseEntity<ApiResponse<FoodListingDTO>> updateAcceptedOrderProgress(
             @PathVariable Long foodId,
@@ -148,9 +142,15 @@ public class FoodListingController {
         try {
             Long volunteerUserId = extractUserIdFromToken(httpRequest);
             if (volunteerUserId == null) {
+                log.warn("Unauthorized progress update request foodId={}", foodId);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Unauthorized"));
             }
+
+            log.info("API update food progress foodId={} volunteerUserId={} action={}",
+                    foodId,
+                    volunteerUserId,
+                    request != null ? request.getAction() : null);
 
             FoodListing updated = foodListingService.updateAcceptedOrderProgress(
                     foodId,
@@ -163,18 +163,16 @@ public class FoodListingController {
                     FoodListingDTO.fromEntity(updated)
             ));
         } catch (RuntimeException e) {
+                log.warn("Failed to update order progress foodId={} error={}", foodId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
+                log.error("Unexpected error while updating order progress foodId={}", foodId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to update order progress: " + e.getMessage()));
         }
     }
 
-    /**
-     * Claim a food listing
-     * POST /api/food/{foodId}/claim
-     */
     @PostMapping("/{foodId}/claim")
     public ResponseEntity<ApiResponse<FoodListingDTO>> claimFood(
             @PathVariable Long foodId,
@@ -196,10 +194,13 @@ public class FoodListingController {
             }
 
             if (volunteerId == null) {
+                log.warn("Unauthorized food claim request foodId={}", foodId);
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Volunteer identity is required"));
             }
+
+            log.info("API claim food request foodId={} volunteerId={} needyZoneId={}", foodId, volunteerId, needyZoneId);
 
             FoodListing claimedFood = foodListingService.claimFoodListing(foodId, volunteerId, needyZoneId);
             FoodListingDTO dto = FoodListingDTO.fromEntity(claimedFood);
@@ -208,20 +209,18 @@ public class FoodListingController {
                     ApiResponse.success("Food claimed successfully", dto)
             );
         } catch (RuntimeException e) {
+                    log.warn("Failed to claim food foodId={} error={}", foodId, e.getMessage());
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
+                    log.error("Unexpected error while claiming food foodId={}", foodId, e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to claim food: " + e.getMessage()));
         }
     }
 
-    /**
-     * Cancel (delete) a food listing — only by the owner
-     * DELETE /api/food/{foodId}
-     */
     @DeleteMapping("/{foodId}")
     public ResponseEntity<ApiResponse<Void>> deleteFoodListing(
             @PathVariable Long foodId,
@@ -234,24 +233,24 @@ public class FoodListingController {
                 userId = jwtService.extractUserId(authHeader.substring(7));
             }
             if (userId == null) {
+                log.warn("Unauthorized delete food request foodId={}", foodId);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Unauthorized"));
             }
+            log.info("API delete food request foodId={} userId={}", foodId, userId);
             foodListingService.deleteFoodListing(foodId, userId);
             return ResponseEntity.ok(ApiResponse.success("Food listing cancelled successfully", null));
         } catch (RuntimeException e) {
+            log.warn("Failed to delete food listing foodId={} error={}", foodId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
+            log.error("Unexpected error while deleting food listing foodId={}", foodId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to cancel food listing: " + e.getMessage()));
         }
     }
 
-    /**
-     * Add a new food listing
-     * POST /api/food
-     */
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<ApiResponse<FoodListingDTO>> addFoodListing(
             @RequestParam("vegetarian") Boolean vegetarian,
@@ -266,12 +265,13 @@ public class FoodListingController {
             HttpServletRequest request
     ) {
         try {
-            // Extract userId from the JWT token — more reliable than a client-supplied param
             Long userId = null;
             String authHeader = request.getHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 userId = jwtService.extractUserId(authHeader.substring(7));
             }
+
+            log.info("API add food listing request userId={} quantity={} location={}", userId, quantity, location);
 
             FoodListing foodListing = foodListingService.addFoodListing(
                     vegetarian, packed, description, quantity, expiryTime,
@@ -282,6 +282,7 @@ public class FoodListingController {
                     .status(HttpStatus.CREATED)
                     .body(ApiResponse.success("Food listing created successfully", dto));
         } catch (Exception e) {
+                    log.error("Unexpected error while creating food listing", e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to create food listing: " + e.getMessage()));

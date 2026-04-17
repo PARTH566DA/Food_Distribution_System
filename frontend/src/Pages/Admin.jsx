@@ -10,7 +10,6 @@ import {
     clearAdminToken,
 } from '../api/admin';
 
-// ── Gradient config (matches rest of site) ───────────────────────────────────
 const gradientProps = {
     color1: '#faaca2', color2: '#fcb594', color3: '#f88ca6',
     timeSpeed: 2.35, colorBalance: -0.02, warpStrength: 1.35,
@@ -29,7 +28,9 @@ const STATUS_META = {
 
 const TABS = ['ALL', 'PENDING', 'ACTIVE', 'INACTIVE'];
 
-// ── Login screen ──────────────────────────────────────────────────────────────
+const MotionDiv = motion.div;
+const MotionP = motion.p;
+
 const LoginScreen = ({ onSuccess }) => {
     const [adminId, setAdminId]     = useState('');
     const [password, setPassword]   = useState('');
@@ -56,13 +57,12 @@ const LoginScreen = ({ onSuccess }) => {
         <div className="relative h-screen w-full overflow-hidden flex items-center justify-center">
             <div className="absolute inset-0"><Gradient {...gradientProps} /></div>
 
-            <motion.div
+            <MotionDiv
                 initial={{ scale: 0.94, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="relative z-10 w-full max-w-sm mx-4"
             >
                 <div className="bg-[#FFF7F6] rounded-[28px] p-8 shadow-2xl">
-                    {/* Icon */}
                     <div className="flex justify-center mb-6">
                         <div className="w-16 h-16 rounded-2xl bg-[#FFECEA] flex items-center justify-center">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FF8B77" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -76,7 +76,6 @@ const LoginScreen = ({ onSuccess }) => {
                     <p className="text-sm text-gray-500 text-center mb-7">Zone verification dashboard</p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Admin ID */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Admin ID</label>
                             <input
@@ -89,7 +88,6 @@ const LoginScreen = ({ onSuccess }) => {
                             />
                         </div>
 
-                        {/* Password */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
                             <div className="relative">
@@ -119,15 +117,13 @@ const LoginScreen = ({ onSuccess }) => {
                             </div>
                         </div>
 
-                        {/* Error */}
                         <AnimatePresence>
                             {error && (
-                                <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                    className="text-xs text-red-500 font-medium text-center">{error}</motion.p>
+                                <MotionP initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                    className="text-xs text-red-500 font-medium text-center">{error}</MotionP>
                             )}
                         </AnimatePresence>
 
-                        {/* Submit */}
                         <button
                             type="submit"
                             disabled={loading}
@@ -146,25 +142,23 @@ const LoginScreen = ({ onSuccess }) => {
                         </button>
                     </form>
                 </div>
-            </motion.div>
+            </MotionDiv>
         </div>
     );
 };
 
-// ── Zone card ─────────────────────────────────────────────────────────────────
 const ZoneCard = ({ zone, onStatusChange, actionLoading }) => {
     const meta = STATUS_META[zone.status] ?? STATUS_META.INACTIVE;
     const isLoading = actionLoading === zone.needyZoneId;
 
     return (
-        <motion.div
+        <MotionDiv
             layout
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96 }}
             className="bg-white rounded-[20px] border border-[#FFE0DB] p-4 flex flex-col gap-3"
         >
-            {/* Top row: name + status badge */}
             <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 text-sm leading-tight truncate">{zone.name}</h3>
@@ -184,7 +178,6 @@ const ZoneCard = ({ zone, onStatusChange, actionLoading }) => {
                 </div>
             </div>
 
-            {/* Meta info */}
             <div className="flex items-center gap-4 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FF8B77" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -202,7 +195,6 @@ const ZoneCard = ({ zone, onStatusChange, actionLoading }) => {
                 )}
             </div>
 
-            {/* Action buttons */}
             <div className="flex gap-2 pt-1">
                 {zone.status !== 'ACTIVE' && (
                     <button
@@ -233,17 +225,16 @@ const ZoneCard = ({ zone, onStatusChange, actionLoading }) => {
                     </button>
                 )}
             </div>
-        </motion.div>
+        </MotionDiv>
     );
 };
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
 const Dashboard = ({ onLogout }) => {
     const [zones, setZones]             = useState([]);
     const [loading, setLoading]         = useState(true);
     const [error, setError]             = useState('');
     const [activeTab, setActiveTab]     = useState('PENDING');
-    const [actionLoading, setActionLoading] = useState(null); // zoneId being updated
+    const [actionLoading, setActionLoading] = useState(null);
     const [toast, setToast]             = useState('');
 
     const loadZones = useCallback(() => {
@@ -290,7 +281,6 @@ const Dashboard = ({ onLogout }) => {
 
             <div className="relative z-10 flex flex-col h-full p-4 gap-3">
 
-                {/* ── Header bar ─────────────────────────────────────────── */}
                 <div className="flex items-center justify-between bg-[#FFECEA] rounded-[22px] px-5 py-3 flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-[#FF8B77] flex items-center justify-center">
@@ -311,7 +301,6 @@ const Dashboard = ({ onLogout }) => {
                     </button>
                 </div>
 
-                {/* ── Stat pills ──────────────────────────────────────────── */}
                 <div className="flex gap-2 flex-shrink-0">
                     {[
                         { key: 'PENDING', label: 'Pending', color: '#FFB347' },
@@ -325,7 +314,6 @@ const Dashboard = ({ onLogout }) => {
                     ))}
                 </div>
 
-                {/* ── Tabs ────────────────────────────────────────────────── */}
                 <div className="flex gap-1.5 bg-[#FFF7F6] rounded-[16px] p-1 border border-[#FFE0DB] flex-shrink-0">
                     {TABS.map((tab) => (
                         <button
@@ -342,7 +330,6 @@ const Dashboard = ({ onLogout }) => {
                     ))}
                 </div>
 
-                {/* ── Zone list ───────────────────────────────────────────── */}
                 <div className="flex-1 overflow-y-auto min-h-0">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center h-full gap-3">
@@ -384,24 +371,22 @@ const Dashboard = ({ onLogout }) => {
                 </div>
             </div>
 
-            {/* ── Toast ────────────────────────────────────────────────────── */}
             <AnimatePresence>
                 {toast && (
-                    <motion.div
+                    <MotionDiv
                         initial={{ y: 60, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 60, opacity: 0 }}
                         className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-xs font-semibold px-5 py-3 rounded-full shadow-xl"
                     >
                         {toast}
-                    </motion.div>
+                    </MotionDiv>
                 )}
             </AnimatePresence>
         </div>
     );
 };
 
-// ── Root component ────────────────────────────────────────────────────────────
 const Admin = () => {
     const [loggedIn, setLoggedIn] = useState(isAdminAuthenticated());
 

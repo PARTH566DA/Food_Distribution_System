@@ -82,16 +82,13 @@ const Login = () => {
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden">
-            {/* Gradient Background */}
             <div className="absolute inset-0">
                 <Gradient {...gradientProps} />
             </div>
 
-            {/* Content */}
             <div className="relative z-10 flex h-screen w-full items-center justify-center">
                 <div className="absolute top-1/2 left-1/2 transform -translate-y-1/2 w-[43.75%] min-w-[320px] bg-[#FFF5F2] rounded-[25px] px-10 py-12 flex flex-col gap-6 shadow-sm">
 
-                    {/* Step indicator */}
                     <div className="flex items-center gap-2">
                         <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step >= 1 ? "bg-[#FF8B77] text-white" : "bg-[#E8D8D3] text-gray-400"}`}>1</span>
                         <div className={`flex-1 h-0.5 ${step >= 2 ? "bg-[#FF8B77]" : "bg-[#E8D8D3]"}`} />

@@ -33,16 +33,13 @@ const ROLES = ["CITIZEN", "NGO"];
 const SignUp = () => {
     const navigate = useNavigate();
 
-    // Step 1 fields
     const [userName, setUserName] = useState("");
     const [mobileNumber, setMobileNumber] = useState("");
     const [emailId, setEmailId] = useState("");
     const [role, setRole] = useState("CITIZEN");
 
-    // Step 2 field
     const [otp, setOtp] = useState("");
 
-    // UI state
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -94,19 +91,16 @@ const SignUp = () => {
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden">
-            {/* Gradient Background */}
             <div className="absolute inset-0">
                 <Gradient {...gradientProps} />
             </div>
 
-            {/* Content */}
             <div className="relative z-10 flex h-screen w-full items-center justify-center">
                 <div className="absolute top-1/2 left-1/2 transform -translate-y-1/2 w-[43.75%] min-w-[320px] bg-[#FFF5F2] rounded-[25px] px-10 py-12 flex flex-col gap-6 shadow-sm">
                     <h1 className="text-3xl font-bold text-gray-900">
                         {step === 1 ? "Sign Up" : "Verify Email"}
                     </h1>
 
-                    {/* Step indicator */}
                     <div className="flex items-center gap-2">
                         <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${step >= 1 ? "bg-[#FF8B77] text-white" : "bg-[#E8D8D3] text-gray-400"}`}>1</span>
                         <div className={`flex-1 h-0.5 ${step >= 2 ? "bg-[#FF8B77]" : "bg-[#E8D8D3]"}`} />
@@ -139,7 +133,6 @@ const SignUp = () => {
                                 className="bg-transparent border-b border-[#D9C7C3] outline-none text-gray-700 placeholder-[#C0ABA6] py-2 text-base"
                             />
 
-                            {/* Role selector */}
                             <div className="flex flex-col gap-1">
                                 <div className="flex gap-3">
                                     {ROLES.map((r) => (

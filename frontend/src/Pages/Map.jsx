@@ -14,7 +14,6 @@ import MainLayout from '../Layout/MainLayout';
 import { fetchAllZones, createNeedyZone, reportZone, DuplicateZoneError } from '../api/zones';
 import { isAuthenticated } from '../api/auth';
 
-// Fix Leaflet default marker icons with Vite
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -26,13 +25,11 @@ L.Icon.Default.mergeOptions({
     shadowUrl: markerShadow,
 });
 
-// ── Status colour map ──────────────────────────────────────────────────────────
 const STATUS_COLORS = {
     ACTIVE:   '#FF6B55',
     PENDING:  '#FFB347',
 };
 
-// ── Custom SVG pin icon per status ────────────────────────────────────────────
 const TAG_ICON_LABELS = { SLUM: 'Slum', LABOUR_CAMP: 'Labour Camp', NIGHT_SHELTER: 'Night Shelter' };
 
 const makeZoneIcon = (status, tagReason) => {
@@ -69,7 +66,6 @@ const makeZoneIcon = (status, tagReason) => {
     });
 };
 
-// Pulsing dot for the new-zone drop point
 const newZoneIcon = L.divIcon({
     html: `<div style="
         width:26px;height:26px;border-radius:50%;
@@ -82,7 +78,6 @@ const newZoneIcon = L.divIcon({
     iconAnchor: [13, 13],
 });
 
-// Small blue dot for user position
 const userPosIcon = L.divIcon({
     html: `<div style="
         width:16px;height:16px;border-radius:50%;
@@ -94,7 +89,6 @@ const userPosIcon = L.divIcon({
     iconAnchor: [8, 8],
 });
 
-// ── Helper: click handler inside the map ──────────────────────────────────────
 const MapClickHandler = ({ active, onMapClick }) => {
     useMapEvents({
         click(e) {
@@ -104,7 +98,6 @@ const MapClickHandler = ({ active, onMapClick }) => {
     return null;
 };
 
-// ── Helper: fit map to all zones on first load ────────────────────────────────
 const MapFitBounds = ({ zones }) => {
     const map = useMap();
     useEffect(() => {
@@ -112,12 +105,12 @@ const MapFitBounds = ({ zones }) => {
             const bounds = L.latLngBounds(zones.map((z) => [z.latitude, z.longitude]));
             map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
         }
-    }, []); // only on mount
+    }, []);
     return null;
 };
 
-// ── Client-side proximity helper (mirrors backend 50 m constant) ─────────────
 const haversineMetres = (lat1, lon1, lat2, lon2) => {
+    // Great-circle distance in meters for quick client-side proximity checks.
     const R = 6_371_000;
     const toRad = (d) => (d * Math.PI) / 180;
     const dLat = toRad(lat2 - lat1);
@@ -126,7 +119,8 @@ const haversineMetres = (lat1, lon1, lat2, lon2) => {
             + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
-const DUPLICATE_RADIUS = 25; // metres
+// UI pre-check radius; backend validation is still the final authority.
+const DUPLICATE_RADIUS = 25;
 
 const REPORT_REASONS = [
     { value: 'INACCURATE_LOCATION', label: 'Inaccurate location' },
@@ -141,14 +135,15 @@ const TAG_REASONS = [
     { value: 'NIGHT_SHELTER', label: 'Night Shelter' },
 ];
 
-// ── Main component ─────────────────────────────────────────────────────────────
+const MotionDiv = motion.div;
+const MotionButton = motion.button;
+
 const Map = () => {
     const [zones, setZones]               = useState([]);
     const [loading, setLoading]           = useState(true);
     const [fetchError, setFetchError]     = useState(null);
     const [selectedZone, setSelectedZone] = useState(null);
 
-    // Marking-mode state
     const [markingMode, setMarkingMode]     = useState(false);
     const [newMarkerPos, setNewMarkerPos]   = useState(null);
     const [showForm, setShowForm]           = useState(false);
@@ -159,18 +154,15 @@ const Map = () => {
 
     const [userPos, setUserPos] = useState(null);
 
-    // Duplicate / nearby zone warning while marking
-    const [nearbyWarning, setNearbyWarning] = useState(null); // { zone, dist }
+    const [nearbyWarning, setNearbyWarning] = useState(null);
 
-    // Report state for the detail sheet
     const [reportSheet, setReportSheet]     = useState(false);
     const [reportReason, setReportReason]   = useState('');
-    const [reportState, setReportState]     = useState('idle'); // idle|loading|done|error|alreadyDone
+    const [reportState, setReportState]     = useState('idle');
     const [reportCount, setReportCount]     = useState(null);
 
     const authenticated = isAuthenticated();
 
-    // ── Load zones ────────────────────────────────────────────────────────────
     const loadZones = useCallback(() => {
         fetchAllZones()
             .then(setZones)
@@ -180,7 +172,6 @@ const Map = () => {
 
     useEffect(() => { loadZones(); }, [loadZones]);
 
-    // ── User geolocation ──────────────────────────────────────────────────────
     useEffect(() => {
         if (!navigator.geolocation) return;
         navigator.geolocation.getCurrentPosition(
@@ -189,9 +180,8 @@ const Map = () => {
         );
     }, []);
 
-    // ── Map click → proximity check → place marker ──────────────────────
     const handleMapClick = useCallback((latlng) => {
-        // Client-side proximity check for immediate feedback
+        // Show immediate duplicate feedback before making a network request.
         const visibleZones = zones.filter((z) => z.status !== 'INACTIVE');
         let closest = null;
         let closestDist = Infinity;
@@ -209,7 +199,7 @@ const Map = () => {
 
     const handleUseMyLocation = () => {
         if (!userPos) return;
-        // Client-side proximity check for immediate feedback
+        // Reuse the same duplicate-warning logic when using GPS as the drop point.
         const visibleZones = zones.filter((z) => z.status !== 'INACTIVE');
         let closest = null;
         let closestDist = Infinity;
@@ -252,7 +242,7 @@ const Map = () => {
             setTimeout(handleCancelMarking, 2200);
         } catch (e) {
             if (e instanceof DuplicateZoneError) {
-                // Server confirmed a duplicate — update the warning with the confirmed zone
+                // Replace client guess with server-confirmed duplicate zone when available.
                 const confirmedZone = zones.find((z) => z.needyZoneId === e.existingZoneId);
                 setNearbyWarning(confirmedZone ? { zone: confirmedZone, dist: null } : null);
                 setFormError(e.message);
@@ -284,7 +274,6 @@ const Map = () => {
             const count = await reportZone(selectedZone.needyZoneId, reportReason);
             setReportState('done');
             setReportCount(count);
-            // Update local zone list to reflect new count
             setZones((prev) =>
                 prev.map((z) => z.needyZoneId === selectedZone.needyZoneId ? { ...z, reportCount: count } : z)
             );
@@ -298,14 +287,13 @@ const Map = () => {
         }
     };
 
-    const defaultCenter = userPos ?? [20.5937, 78.9629]; // India fallback
+    const defaultCenter = userPos ?? [20.5937, 78.9629];
+    const visibleZones = zones.filter((zone) => zone.status !== 'INACTIVE');
 
     return (
         <MainLayout activeHref="/map">
-            {/* fill the rounded main content box */}
             <div className="relative mt-[24px] mb-[12px] h-[calc(100%-24px)] w-[60%] left-1/2 -translate-x-1/2 overflow-hidden rounded-[25px]">
 
-                {/* ── Loading overlay ───────────────────────────────────────── */}
                 {loading && (
                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#FFF7F6]">
                         <div className="flex flex-col items-center gap-3">
@@ -315,11 +303,10 @@ const Map = () => {
                     </div>
                 )}
 
-                {/* ── Leaflet map ───────────────────────────────────────────── */}
                 {!loading && (
                     <MapContainer
-                        center={zones.filter((z) => z.status !== 'INACTIVE').length > 0 ? [zones.filter((z) => z.status !== 'INACTIVE')[0].latitude, zones.filter((z) => z.status !== 'INACTIVE')[0].longitude] : defaultCenter}
-                        zoom={zones.filter((z) => z.status !== 'INACTIVE').length > 0 ? 12 : 5}
+                        center={visibleZones.length > 0 ? [visibleZones[0].latitude, visibleZones[0].longitude] : defaultCenter}
+                        zoom={visibleZones.length > 0 ? 12 : 5}
                         style={{ height: '100%', width: '100%', zIndex: 0 }}
                         scrollWheelZoom
                         zoomControl={false}
@@ -329,8 +316,7 @@ const Map = () => {
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
 
-                        {/* Needy zone pins (INACTIVE zones are hidden) */}
-                        {zones.filter((z) => z.status !== 'INACTIVE').map((zone) => (
+                        {visibleZones.map((zone) => (
                             <Marker
                                 key={zone.needyZoneId}
                                 position={[zone.latitude, zone.longitude]}
@@ -345,19 +331,17 @@ const Map = () => {
                             </Marker>
                         ))}
 
-                        {/* User position */}
                         {userPos && (
                             <Marker position={userPos} icon={userPosIcon}>
                                 <Popup>Your location</Popup>
                             </Marker>
                         )}
 
-                        {/* New zone drop point */}
                         {newMarkerPos && (
                             <Marker position={newMarkerPos} icon={newZoneIcon} />
                         )}
 
-                        {zones.filter((z) => z.status !== 'INACTIVE').length > 0 && <MapFitBounds zones={zones.filter((z) => z.status !== 'INACTIVE')} />}
+                        {visibleZones.length > 0 && <MapFitBounds zones={visibleZones} />}
 
                         <MapClickHandler
                             active={markingMode && !showForm}
@@ -366,16 +350,14 @@ const Map = () => {
                     </MapContainer>
                 )}
 
-                {/* ── Top zone count badge ──────────────────────────────────── */}
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
                     <div className="bg-white/85 backdrop-blur-md rounded-2xl px-4 py-2 shadow border border-[#FFE0DB]">
                         <p className="text-xs font-semibold text-gray-600 whitespace-nowrap">
-                            {zones.filter((z) => z.status !== 'INACTIVE').length} needy zone{zones.filter((z) => z.status !== 'INACTIVE').length !== 1 ? 's' : ''} on map
+                            {visibleZones.length} needy zone{visibleZones.length !== 1 ? 's' : ''} on map
                         </p>
                     </div>
                 </div>
 
-                {/* ── Error banner ──────────────────────────────────────────── */}
                 {fetchError && (
                     <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10">
                         <div className="bg-white/90 border border-orange-200 text-orange-600 rounded-2xl px-4 py-2 text-xs font-medium shadow">
@@ -384,10 +366,9 @@ const Map = () => {
                     </div>
                 )}
 
-                {/* ── "Tap to place" instruction banner ────────────────────── */}
                 <AnimatePresence>
                     {markingMode && !showForm && (
-                        <motion.div
+                        <MotionDiv
                             initial={{ y: -40, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             exit={{ y: -40, opacity: 0 }}
@@ -399,11 +380,10 @@ const Map = () => {
                                 </svg>
                                 Tap anywhere on the map to place a marker
                             </div>
-                        </motion.div>
+                        </MotionDiv>
                     )}
                 </AnimatePresence>
 
-                {/* ── Legend ───────────────────────────────────────────────── */}
                 <div className="absolute top-3 left-3 z-10">
                     <div className="bg-white/85 backdrop-blur-md rounded-2xl px-3 py-2.5 shadow border border-[#FFE0DB] space-y-1.5">
                         <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wide mb-0.5">Status</p>
@@ -416,12 +396,10 @@ const Map = () => {
                     </div>
                 </div>
 
-                {/* ── FAB: Mark Zone / Cancel ───────────────────────────────── */}
                 <div className="absolute bottom-5 right-4 z-10 flex flex-col items-end gap-2.5">
-                    {/* "Use my location" secondary button */}
                     <AnimatePresence>
                         {markingMode && !showForm && userPos && (
-                            <motion.button
+                            <MotionButton
                                 initial={{ x: 60, opacity: 0 }}
                                 animate={{ x: 0, opacity: 1 }}
                                 exit={{ x: 60, opacity: 0 }}
@@ -432,13 +410,12 @@ const Map = () => {
                                     <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
                                 </svg>
                                 Use my location
-                            </motion.button>
+                            </MotionButton>
                         )}
                     </AnimatePresence>
 
-                    {/* Primary FAB */}
                     {!markingMode ? (
-                        <motion.button
+                        <MotionButton
                             whileTap={{ scale: 0.94 }}
                             onClick={() => {
                                 if (!authenticated) {
@@ -458,9 +435,9 @@ const Map = () => {
                                 <circle cx="12" cy="10" r="3"/>
                             </svg>
                             Mark Needy Zone
-                        </motion.button>
+                        </MotionButton>
                     ) : (
-                        <motion.button
+                        <MotionButton
                             whileTap={{ scale: 0.94 }}
                             onClick={handleCancelMarking}
                             className="flex items-center gap-2 px-5 py-3 rounded-full text-[#FF6B55] bg-white/90 backdrop-blur-sm border border-[#FFE0DB] text-sm font-bold shadow-md"
@@ -469,24 +446,21 @@ const Map = () => {
                                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                             </svg>
                             Cancel
-                        </motion.button>
+                        </MotionButton>
                     )}
                 </div>
 
-                {/* ═══════════════════════════════════════════════════════════ */}
-                {/* ── Zone Detail Bottom Sheet ───────────────────────────── */}
-                {/* ═══════════════════════════════════════════════════════════ */}
                 <AnimatePresence>
                     {selectedZone && (
                         <>
-                            <motion.div
+                            <MotionDiv
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[2px]"
                                 onClick={() => setSelectedZone(null)}
                             />
-                            <motion.div
+                            <MotionDiv
                                 initial={{ y: '100%', opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 exit={{ y: '100%', opacity: 0 }}
@@ -498,7 +472,6 @@ const Map = () => {
                                     <div className="w-10 h-1.5 rounded-full bg-[#D9D9D9]" />
                                 </div>
                                 <div className="px-5 pb-9 pt-2">
-                                    {/* Header */}
                                     <div className="flex items-center gap-3 mb-5">
                                         <button
                                             onClick={() => setSelectedZone(null)}
@@ -511,7 +484,6 @@ const Map = () => {
                                         <h2 className="text-xl font-bold text-gray-900">Zone Details</h2>
                                     </div>
 
-                                    {/* Zone card */}
                                     <div className="rounded-[20px] bg-[#FFECEA] p-4 mb-5">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex-1 pr-3">
@@ -557,7 +529,6 @@ const Map = () => {
                                         </div>
                                     </div>
 
-                                    {/* Directions CTA */}
                                     <a
                                         href={`https://www.google.com/maps/search/?api=1&query=${selectedZone.latitude},${selectedZone.longitude}`}
                                         target="_blank"
@@ -571,7 +542,6 @@ const Map = () => {
                                         Open in Google Maps
                                     </a>
 
-                                    {/* Report section */}
                                     {authenticated && (
                                         <div className="mt-3">
                                             <div className="w-full h-[1px] bg-[#FFDDD8] mb-3" />
@@ -594,25 +564,22 @@ const Map = () => {
                                         </div>
                                     )}
                                 </div>
-                            </motion.div>
+                            </MotionDiv>
                         </>
                     )}
                 </AnimatePresence>
 
-                {/* ═══════════════════════════════════════════════════════════ */}
-                {/* ── Create Zone Form Bottom Sheet ──────────────────────── */}
-                {/* ═══════════════════════════════════════════════════════════ */}
                 <AnimatePresence>
                     {showForm && (
                         <>
-                            <motion.div
+                            <MotionDiv
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 className="fixed inset-0 z-30 bg-black/50 backdrop-blur-[2px]"
                                 onClick={handleCancelMarking}
                             />
-                            <motion.div
+                            <MotionDiv
                                 initial={{ y: '100%', opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 exit={{ y: '100%', opacity: 0 }}
@@ -624,7 +591,6 @@ const Map = () => {
                                     <div className="w-10 h-1.5 rounded-full bg-[#D9D9D9]" />
                                 </div>
                                 <div className="px-5 pb-10 pt-2">
-                                    {/* Header */}
                                     <div className="flex items-center gap-3 mb-5">
                                         <button
                                             onClick={handleCancelMarking}
@@ -637,7 +603,6 @@ const Map = () => {
                                         <h2 className="text-xl font-bold text-gray-900">Mark Needy Zone</h2>
                                     </div>
 
-                                    {/* Selected coordinates */}
                                     {newMarkerPos && (
                                         <div className="flex items-center gap-3 rounded-[16px] bg-[#FFECEA] border border-[#FFE0DB] px-4 py-3 mb-4">
                                             <div className="w-9 h-9 rounded-full bg-[#FF8B77] flex items-center justify-center flex-shrink-0">
@@ -654,10 +619,9 @@ const Map = () => {
                                         </div>
                                     )}
 
-                                    {/* Nearby zone warning */}
                                     <AnimatePresence>
                                         {nearbyWarning && (
-                                            <motion.div
+                                            <MotionDiv
                                                 initial={{ opacity: 0, y: -6 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0 }}
@@ -682,11 +646,10 @@ const Map = () => {
                                                         View that zone →
                                                     </button>
                                                 </div>
-                                            </motion.div>
+                                            </MotionDiv>
                                         )}
                                     </AnimatePresence>
 
-                                    {/* Zone name input */}
                                     <div className="mb-4">
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                                             Zone Name <span className="text-[#FF8B77]">*</span>
@@ -700,7 +663,6 @@ const Map = () => {
                                         />
                                     </div>
 
-                                    {/* Zone type chips */}
                                     <div className="mb-5">
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                                             Zone Type <span className="text-xs font-normal text-gray-400">(optional)</span>
@@ -727,14 +689,12 @@ const Map = () => {
                                         </div>
                                     </div>
 
-                                    {/* Inline error */}
                                     {formError && (
                                         <p className="text-xs text-red-500 font-medium mb-3">{formError}</p>
                                     )}
 
-                                    {/* Submit / Success state */}
                                     {submitSuccess ? (
-                                        <motion.div
+                                        <MotionDiv
                                             initial={{ scale: 0.9, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}
                                             className="w-full h-[56px] rounded-full bg-green-500 flex items-center justify-center gap-2"
@@ -743,7 +703,7 @@ const Map = () => {
                                                 <polyline points="20 6 9 17 4 12"/>
                                             </svg>
                                             <span className="text-white font-bold">Submitted for review!</span>
-                                        </motion.div>
+                                        </MotionDiv>
                                     ) : (
                                         <button
                                             onClick={handleSubmit}
@@ -768,23 +728,20 @@ const Map = () => {
                                         </button>
                                     )}
                                 </div>
-                            </motion.div>
+                            </MotionDiv>
                         </>
                     )}
                 </AnimatePresence>
 
-                {/* ══════════════════════════════════════════════════════════ */}
-                {/* ── Report Zone Bottom Sheet ─────────────────────────────── */}
-                {/* ══════════════════════════════════════════════════════════ */}
                 <AnimatePresence>
                     {reportSheet && selectedZone && (
                         <>
-                            <motion.div
+                            <MotionDiv
                                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                 className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]"
                                 onClick={handleCloseReport}
                             />
-                            <motion.div
+                            <MotionDiv
                                 initial={{ y: '100%', opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 exit={{ y: '100%', opacity: 0 }}
@@ -796,7 +753,6 @@ const Map = () => {
                                     <div className="w-10 h-1.5 rounded-full bg-[#D9D9D9]" />
                                 </div>
                                 <div className="px-5 pb-10 pt-2">
-                                    {/* Header */}
                                     <div className="flex items-center gap-3 mb-5">
                                         <button
                                             onClick={handleCloseReport}
@@ -813,7 +769,7 @@ const Map = () => {
                                     </div>
 
                                     {reportState === 'done' ? (
-                                        <motion.div
+                                        <MotionDiv
                                             initial={{ scale: 0.9, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}
                                             className="w-full py-5 rounded-[20px] bg-green-50 border border-green-200 flex flex-col items-center gap-2"
@@ -825,7 +781,7 @@ const Map = () => {
                                             {reportCount !== null && (
                                                 <p className="text-xs text-green-600">{reportCount} total report{reportCount !== 1 ? 's' : ''} on this zone</p>
                                             )}
-                                        </motion.div>
+                                        </MotionDiv>
                                     ) : reportState === 'alreadyDone' ? (
                                         <div className="w-full py-5 rounded-[20px] bg-orange-50 border border-orange-200 flex flex-col items-center gap-2">
                                             <p className="text-sm font-bold text-orange-700">Already reported</p>
@@ -868,7 +824,7 @@ const Map = () => {
                                         </>
                                     )}
                                 </div>
-                            </motion.div>
+                            </MotionDiv>
                         </>
                     )}
                 </AnimatePresence>

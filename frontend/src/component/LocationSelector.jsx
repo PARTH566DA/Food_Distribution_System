@@ -3,10 +3,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// For MapmyIndia, you would need their official plugin: @mappls/mappls-web-maps
-// Currently using CartoDB as it works without complex authentication
 
-// Fix for default marker icon in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -14,7 +11,6 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Child component to handle map click events
 const MapClickHandler = ({ onLocationSelect }) => {
     useMapEvents({
         click: (e) => {
@@ -30,11 +26,9 @@ const LocationSelector = () => {
     const [longitude, setLongitude] = useState(null);
     const [showMap, setShowMap] = useState(false);
 
-    // Default center: Ahmedabad coordinates
     const defaultCenter = [23.0225, 72.5714];
     const defaultZoom = 13;
 
-    // Handle "Use Current Location" button click
     const handleUseCurrentLocation = () => {
         if (!navigator.geolocation) {
             alert('Geolocation is not supported by your browser');
@@ -55,22 +49,18 @@ const LocationSelector = () => {
         );
     };
 
-    // Handle "Pick From Map" button click
     const handlePickFromMap = () => {
         setShowMap(true);
     };
 
-    // Handle map click to select location
     const handleMapLocationSelect = (lat, lng) => {
         setLatitude(lat);
         setLongitude(lng);
     };
 
-    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validate that a location is selected
         if (latitude === null || longitude === null) {
             alert('Please select a location before submitting');
             return;
@@ -103,7 +93,6 @@ const LocationSelector = () => {
             <h1 style={{ marginBottom: '20px' }}>Select Your Location</h1>
 
             <form onSubmit={handleSubmit}>
-                {/* Location Selection Buttons */}
                 <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
                     <button
                         type="button"
@@ -136,7 +125,6 @@ const LocationSelector = () => {
                     </button>
                 </div>
 
-                {/* Display Selected Coordinates */}
                 {latitude !== null && longitude !== null && (
                     <div
                         style={{
@@ -154,7 +142,6 @@ const LocationSelector = () => {
                     </div>
                 )}
 
-                {/* Map Section */}
                 {showMap && (
                     <div style={{ marginBottom: '20px', height: '400px', borderRadius: '4px', overflow: 'hidden' }}>
                         <MapContainer
@@ -176,7 +163,6 @@ const LocationSelector = () => {
                     </div>
                 )}
 
-                {/* Submit Button */}
                 <button
                     type="submit"
                     style={{

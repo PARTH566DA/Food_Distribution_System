@@ -8,10 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Records a single user's flag/report against a needy zone.
- * Unique per (zone, reportedBy) so a user can only report a given zone once.
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -35,7 +31,6 @@ public class ZoneReport {
     @JoinColumn(name = "reported_by_user_id", nullable = false)
     private User reportedBy;
 
-    /** Free-text reason supplied by the user (optional). */
     @Column(name = "reason", length = 120)
     private String reason;
 

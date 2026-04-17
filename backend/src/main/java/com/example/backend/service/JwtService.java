@@ -19,11 +19,7 @@ public class JwtService {
     @Value("${jwt.expiration-ms}")
     private long expirationMs;
 
-    // ── Token generation ──────────────────────────────────────────────────────
 
-    /**
-     * Generates a signed JWT containing userId, email, and role as claims.
-     */
     public String generateToken(Long userId, String email, String role) {
         return Jwts.builder()
                 .subject(email)
@@ -37,7 +33,6 @@ public class JwtService {
                 .compact();
     }
 
-    // ── Token validation ──────────────────────────────────────────────────────
 
     public boolean isValid(String token) {
         try {
@@ -57,14 +52,12 @@ public class JwtService {
     }
 
     public Long extractUserId(String token) {
-        // jjwt deserialises numbers as Integer when they fit; cast safely
         Object raw = getClaims(token).get("userId");
         if (raw instanceof Long l) return l;
         if (raw instanceof Integer i) return i.longValue();
         return Long.parseLong(raw.toString());
     }
 
-    // ── Internal helpers ──────────────────────────────────────────────────────
 
     private Claims getClaims(String token) {
         return Jwts.parser()

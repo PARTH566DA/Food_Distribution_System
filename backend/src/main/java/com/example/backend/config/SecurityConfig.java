@@ -35,16 +35,11 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Auth endpoints are public
                 .requestMatchers("/api/auth/**").permitAll()
-                // Static uploads are public
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/error").permitAll()
-                // Zone map is publicly viewable; creation requires auth
                 .requestMatchers(HttpMethod.GET, "/api/zones/**").permitAll()
-                // Admin login is public; all other /api/admin/** require ADMIN role (enforced via @PreAuthorize)
                 .requestMatchers("/api/admin/login").permitAll()
-                // Everything else requires a valid JWT
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

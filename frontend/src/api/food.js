@@ -1,9 +1,7 @@
 import { authHeader } from './auth';
 
-// API configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
-// API client with error handling (JSON)
 const apiClient = async (endpoint, options = {}) => {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -28,12 +26,10 @@ const apiClient = async (endpoint, options = {}) => {
   }
 };
 
-// Fetch paginated food listings
 export const fetchFoodPage = async (page = 0, size = 5) => {
   try {
     const response = await apiClient(`/food/feed?page=${page}&size=${size}`);
 
-    // The backend returns: { success: true, data: { items, currentPage, totalPages, totalItems, hasMore } }
     if (response.success && response.data) {
       return response.data;
     }
@@ -45,7 +41,6 @@ export const fetchFoodPage = async (page = 0, size = 5) => {
   }
 };
 
-// Claim a food listing
 export const claimFood = async (foodId, options = {}) => {
   try {
     const payload = {
@@ -69,7 +64,6 @@ export const claimFood = async (foodId, options = {}) => {
   }
 };
 
-// Get specific food listing details
 export const getFoodDetails = async (foodId) => {
   try {
     const response = await apiClient(`/food/${foodId}`);
@@ -85,7 +79,6 @@ export const getFoodDetails = async (foodId) => {
   }
 };
 
-// Add a new food listing (multipart/form-data with optional image)
 export const addFood = async (formData) => {
   try {
     const body = new FormData();
@@ -100,13 +93,11 @@ export const addFood = async (formData) => {
     if (formData.image) {
       body.append('image', formData.image);
     }
-    // userId is now extracted server-side from the JWT token
 
     const response = await fetch(`${API_BASE_URL}/food`, {
       method: 'POST',
       headers: { ...authHeader() },
       body,
-      // Do NOT set Content-Type — browser sets it automatically with boundary for multipart
     });
 
     if (!response.ok) {
@@ -125,7 +116,6 @@ export const addFood = async (formData) => {
   }
 };
 
-// Cancel (delete) a food listing owned by the current user
 export const deleteFood = async (foodId) => {
   try {
     const response = await apiClient(`/food/${foodId}`, { method: 'DELETE' });
@@ -139,7 +129,6 @@ export const deleteFood = async (foodId) => {
   }
 };
 
-// Fetch listings posted by current user (history)
 export const fetchPostedHistory = async () => {
   try {
     const response = await apiClient('/food/history/posted');
@@ -153,7 +142,6 @@ export const fetchPostedHistory = async () => {
   }
 };
 
-// Fetch listings accepted by current user (volunteer history)
 export const fetchAcceptedHistory = async () => {
   try {
     const response = await apiClient('/food/history/accepted');
@@ -167,7 +155,6 @@ export const fetchAcceptedHistory = async () => {
   }
 };
 
-// Update progress for an accepted order (PICKED_UP | DELIVERED)
 export const updateAcceptedOrderProgress = async (foodId, action) => {
   try {
     const response = await apiClient(`/food/${foodId}/progress`, {

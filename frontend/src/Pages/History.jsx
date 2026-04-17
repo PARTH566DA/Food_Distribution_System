@@ -14,8 +14,6 @@ const TABS = {
     ACCEPTED: "accepted",
 };
 
-const POSTED_STEPS = ["Posted", "Accepted", "Picked Up", "Delivered"];
-const ACCEPTED_STEPS = ["Accepted", "Picked Up", "Delivered"];
 const AUTO_TRIGGER_DISTANCE_METERS = 10;
 const AUTO_EXIT_DISTANCE_METERS = 20;
 
@@ -62,21 +60,6 @@ const buildMapUrl = (item) => {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item?.address || "")}`;
 };
 
-const getProgressIndex = (status, tab) => {
-    if (tab === TABS.POSTED) {
-        if (status === "open") return 0;
-        if (status === "assigned") return 1;
-        if (status === "picked_up") return 2;
-        if (status === "delivered") return 3;
-        return -1;
-    }
-
-    if (status === "assigned") return 0;
-    if (status === "picked_up") return 1;
-    if (status === "delivered") return 2;
-    return -1;
-};
-
 const isInProcess = (status) => ["open", "assigned", "picked_up"].includes(status);
 
 const toTime = (value) => {
@@ -103,6 +86,32 @@ const toCoordinates = (lat, lng) => {
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
     return { latitude, longitude };
 };
+
+const getMostRecentEventTime = (item) => Math.max(
+    toTime(item?.createdAt),
+    toTime(item?.acceptedAt),
+    toTime(item?.pickedUpAt),
+    toTime(item?.deliveredAt)
+);
+
+const getAutoProgressTarget = (item) => {
+    const workflowStatus = normalizeWorkflowStatus(item);
+    if (workflowStatus === "assigned") {
+        return {
+            action: "PICKED_UP",
+            target: toCoordinates(item.pickupLatitude, item.pickupLongitude),
+        };
+    }
+    if (workflowStatus === "picked_up") {
+        return {
+            action: "DELIVERED",
+            target: toCoordinates(item.targetZoneLatitude, item.targetZoneLongitude),
+        };
+    }
+    return { action: null, target: null };
+};
+
+const toggleValue = (current, nextValue) => (current === nextValue ? null : nextValue);
 
 const AssignmentChatPanel = ({ item, currentUser }) => {
     const [messages, setMessages] = useState([]);
@@ -400,7 +409,7 @@ const HistoryCard = ({ item, tab, onProgressUpdate, updatingAction, currentUser,
 };
 
 const History = () => {
-    const [currentUser] = useState(() => getUser());
+    const currentUser = useMemo(() => getUser(), []);
     const [activeTab, setActiveTab] = useState(TABS.POSTED);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -449,22 +458,10 @@ const History = () => {
     const activeItems = useMemo(() => {
         const source = activeTab === TABS.POSTED ? postedItems : acceptedItems;
 
-        // Show newest entries first on History regardless of backend ordering.
-        return [...source].sort((a, b) => {
-            const aRecent = Math.max(
-                toTime(a?.createdAt),
-                toTime(a?.acceptedAt),
-                toTime(a?.pickedUpAt),
-                toTime(a?.deliveredAt)
-            );
-            const bRecent = Math.max(
-                toTime(b?.createdAt),
-                toTime(b?.acceptedAt),
-                toTime(b?.pickedUpAt),
-                toTime(b?.deliveredAt)
-            );
-            return bRecent - aRecent;
-        });
+        return source
+            .map((item) => ({ item, recentTime: getMostRecentEventTime(item) }))
+            .sort((a, b) => b.recentTime - a.recentTime)
+            .map(({ item }) => item);
     }, [activeTab, postedItems, acceptedItems]);
 
     const handleProgressUpdate = async (item, action, options = {}) => {
@@ -515,17 +512,7 @@ const History = () => {
                 const userLng = position.coords.longitude;
 
                 for (const item of acceptedItems) {
-                    const workflowStatus = normalizeWorkflowStatus(item);
-                    let action = null;
-                    let target = null;
-
-                    if (workflowStatus === "assigned") {
-                        action = "PICKED_UP";
-                        target = toCoordinates(item.pickupLatitude, item.pickupLongitude);
-                    } else if (workflowStatus === "picked_up") {
-                        action = "DELIVERED";
-                        target = toCoordinates(item.targetZoneLatitude, item.targetZoneLongitude);
-                    }
+                    const { action, target } = getAutoProgressTarget(item);
 
                     if (!action || !target || !item?.id) continue;
 
@@ -630,7 +617,7 @@ const History = () => {
                                 currentUser={currentUser}
                                 isChatOpen={openChatAssignmentId === item.assignmentId}
                                 onToggleChat={(assignmentId) => {
-                                    setOpenChatAssignmentId((prev) => prev === assignmentId ? null : assignmentId);
+                                    setOpenChatAssignmentId((prev) => toggleValue(prev, assignmentId));
                                 }}
                             />
                         ))}

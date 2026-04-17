@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NeedyZoneService {
 
-    /** Zones within this many metres are considered duplicate submissions. */
     private static final double DUPLICATE_RADIUS_METRES = 50.0;
     private static final long PENDING_REPORT_THRESHOLD = 3L;
     private static final long INACTIVE_REPORT_THRESHOLD = 5L;
@@ -44,11 +43,7 @@ public class NeedyZoneService {
     private final ZoneTagRepository zoneTagRepository;
     private final ZoneReportRepository zoneReportRepository;
 
-    // ── Queries ───────────────────────────────────────────────────────────────
 
-    /**
-     * Returns all zones enriched with their current report counts.
-     */
     @Transactional(readOnly = true)
     public List<NeedyZoneDTO> getAllZonesWithReports() {
         return needyZonesRepository.findAll().stream()
@@ -56,35 +51,22 @@ public class NeedyZoneService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get raw entity list (used internally / admin).
-     */
     @Transactional(readOnly = true)
     public List<NeedyZones> getAllZones() {
         return needyZonesRepository.findAll();
     }
 
-    /**
-     * Get only ACTIVE needy zones.
-     */
     @Transactional(readOnly = true)
     public List<NeedyZones> getActiveZones() {
         return needyZonesRepository.findByStatus(NeedyZoneStatus.ACTIVE);
     }
 
-    // ── Mutations ─────────────────────────────────────────────────────────────
 
-    /**
-     * Create a new needy zone.  Rejects the request if a non-INACTIVE zone
-     * already exists within {@value #DUPLICATE_RADIUS_METRES} metres.
-     * Zone starts with PENDING status.
-     */
     @Transactional
     public NeedyZones createZone(CreateNeedyZoneRequest request, String creatorEmail) {
         User creator = userRepository.findByEmailId(creatorEmail)
                 .orElseThrow(() -> new RuntimeException("User not found: " + creatorEmail));
 
-        // ── Proximity / duplicate check ──────────────────────────────────────
         List<NeedyZones> existing = needyZonesRepository.findAll();
         for (NeedyZones z : existing) {
             if (z.getStatus() == NeedyZoneStatus.INACTIVE) continue;
@@ -108,7 +90,6 @@ public class NeedyZoneService {
 
         NeedyZones savedZone = needyZonesRepository.save(zone);
 
-        // Optionally create a tag entry if tagReason is provided
         if (request.getTagReason() != null && !request.getTagReason().isBlank()) {
             try {
                 TagReason reason = TagReason.valueOf(request.getTagReason().toUpperCase());
@@ -125,9 +106,6 @@ public class NeedyZoneService {
         return savedZone;
     }
 
-    /**
-     * Update the status of a needy zone (admin action: ACTIVE, INACTIVE, PENDING).
-     */
     @Transactional
     public NeedyZones updateZoneStatus(Long zoneId, String newStatus) {
         NeedyZones zone = needyZonesRepository.findById(zoneId)
@@ -137,11 +115,6 @@ public class NeedyZoneService {
         return needyZonesRepository.save(zone);
     }
 
-    /**
-     * Record a user's report against a zone.
-     * Throws if the user has already reported this zone.
-     * Returns the updated report count.
-     */
     @Transactional
     public long reportZone(Long zoneId, String userEmail, String reason) {
         NeedyZones zone = needyZonesRepository.findById(zoneId)
@@ -162,17 +135,6 @@ public class NeedyZoneService {
         return zoneReportRepository.countByZone(zone);
     }
 
-    /**
-     * Periodically auto-adjusts zone statuses based on quality and activity signals.
-     *
-     * Rules:
-     * 1) reports >= 5 -> INACTIVE
-     * 2) reports >= 3 -> PENDING
-     * 3) recent deliveries in last 30 days >= 2 -> ACTIVE
-     * 4) last delivery older than 90 days -> INACTIVE
-     * 5) last delivery older than 45 days -> PENDING
-     * 6) never delivered + old zone -> PENDING/INACTIVE by age
-     */
     @Scheduled(fixedRateString = "${app.zone.automation.interval-ms:1800000}")
     @Transactional
     public void autoAdjustZoneStatuses() {
@@ -246,14 +208,9 @@ public class NeedyZoneService {
         return zone.getStatus();
     }
 
-    // ── Internal helpers ──────────────────────────────────────────────────────
 
-    /**
-     * Haversine formula: returns the great-circle distance in metres
-     * between two WGS-84 coordinates.
-     */
     private static double haversineMetres(double lat1, double lon1, double lat2, double lon2) {
-        final double R = 6_371_000.0; // earth radius in metres
+        final double R = 6_371_000.0;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
@@ -262,7 +219,6 @@ public class NeedyZoneService {
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    // ── Custom exception (carries nearby zone ID for the client) ──────────────
 
     public static class DuplicateZoneException extends RuntimeException {
         private final Long existingZoneId;

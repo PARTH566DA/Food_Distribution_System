@@ -1,6 +1,8 @@
 import { motion, useSpring, useTransform } from 'motion/react';
 import { useEffect } from 'react';
 
+const MotionSpan = motion.span;
+
 function Number({ mv, number, height }) {
   const y = useTransform(mv, latest => {
     const placeValue = latest % 10;
@@ -20,7 +22,7 @@ function Number({ mv, number, height }) {
     justifyContent: 'center'
   };
 
-  return <motion.span style={{ ...baseStyle, y }}>{number}</motion.span>;
+  return <MotionSpan style={{ ...baseStyle, y }}>{number}</MotionSpan>;
 }
 
 function Digit({ place, value, height, digitStyle }) {
@@ -65,7 +67,6 @@ export default function Counter({
   value,
   fontSize = 100,
   padding = 0,
-  // same refactored default as your CSS version
   places = [...value.toString()].map((ch, i, a) => {
     if (ch === '.') return '.';
     return (

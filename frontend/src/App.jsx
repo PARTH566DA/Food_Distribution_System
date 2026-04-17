@@ -11,7 +11,6 @@ import Admin from './Pages/Admin';
 import History from './Pages/History';
 import { isAuthenticated } from './api/auth';
 
-/** Wraps routes that require a valid JWT. Redirects to /login otherwise. */
 const ProtectedRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" replace />;
 };
@@ -20,11 +19,9 @@ const App = () => {
   return (
     <div className="w-full h-screen">
       <Routes>
-        {/* Public routes */}
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected routes */}
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/addfood" element={<ProtectedRoute><AddFood /></ProtectedRoute>} />
         <Route path="/notification" element={<ProtectedRoute><Notification /></ProtectedRoute>} />
@@ -32,10 +29,8 @@ const App = () => {
         <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
 
-        {/* Admin portal – handles its own auth gate internally */}
         <Route path="/admin" element={<Admin />} />
 
-        {/* Default: authenticated users → /home, guests → /login */}
         <Route path="/" element={<Navigate to={isAuthenticated() ? '/home' : '/login'} replace />} />
         <Route path="*" element={<Navigate to={isAuthenticated() ? '/home' : '/login'} replace />} />
       </Routes>

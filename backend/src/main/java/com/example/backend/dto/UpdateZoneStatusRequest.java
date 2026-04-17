@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateZoneStatusRequest {
 
-    /** ACTIVE | INACTIVE | PENDING */
     private String status;
 }

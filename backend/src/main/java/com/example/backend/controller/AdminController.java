@@ -21,13 +21,7 @@ public class AdminController {
     private final AdminService adminService;
     private final NeedyZoneService needyZoneService;
 
-    // ── Authentication ────────────────────────────────────────────────────────
 
-    /**
-     * POST /api/admin/login
-     * Validates adminId + password against application.properties credentials.
-     * Returns a JWT with role=ADMIN on success.
-     */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<String>> adminLogin(@RequestBody AdminLoginRequest request) {
         try {
@@ -40,13 +34,7 @@ public class AdminController {
         }
     }
 
-    // ── Zone Management ───────────────────────────────────────────────────────
 
-    /**
-     * GET /api/admin/zones
-     * Returns all needy zones (all statuses) for admin review.
-     * Requires ADMIN role.
-     */
     @GetMapping("/zones")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<NeedyZoneDTO>>> getAllZones() {
@@ -59,12 +47,6 @@ public class AdminController {
         }
     }
 
-    /**
-     * PATCH /api/admin/zones/{id}/status
-     * Approve (ACTIVE) or reject (INACTIVE) a zone.
-     * Requires ADMIN role.
-     * Body: { "status": "ACTIVE" | "INACTIVE" | "PENDING" }
-     */
     @PatchMapping("/zones/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<NeedyZoneDTO>> updateZoneStatus(

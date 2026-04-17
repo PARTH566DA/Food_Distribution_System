@@ -8,6 +8,7 @@ import com.example.backend.repository.AssignmentChatMessageRepository;
 import com.example.backend.repository.FoodAssignmentRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AssignmentChatService {
 
     private final FoodAssignmentRepository foodAssignmentRepository;
@@ -24,23 +26,29 @@ public class AssignmentChatService {
 
     @Transactional(readOnly = true)
     public List<AssignmentChatMessageDTO> getMessages(Long assignmentId, Long requesterUserId) {
+        log.info("Fetching assignment chat assignmentId={} requesterUserId={}", assignmentId, requesterUserId);
         FoodAssignment assignment = getAuthorizedAssignment(assignmentId, requesterUserId);
-        return assignmentChatMessageRepository
+        List<AssignmentChatMessageDTO> messages = assignmentChatMessageRepository
                 .findTop200ByAssignmentAssignmentIdOrderByCreatedAtAsc(assignment.getAssignmentId())
                 .stream()
                 .map(AssignmentChatMessageDTO::fromEntity)
                 .toList();
+        log.info("Fetched assignment chat messages assignmentId={} count={}", assignmentId, messages.size());
+        return messages;
     }
 
     @Transactional
     public AssignmentChatMessageDTO sendMessage(Long assignmentId, Long senderUserId, String message) {
+        log.info("Sending assignment chat message assignmentId={} senderUserId={}", assignmentId, senderUserId);
         FoodAssignment assignment = getAuthorizedAssignment(assignmentId, senderUserId);
 
         String trimmed = message == null ? "" : message.trim();
         if (trimmed.isBlank()) {
+            log.warn("Rejected empty assignment chat message assignmentId={} senderUserId={}", assignmentId, senderUserId);
             throw new RuntimeException("Message cannot be empty");
         }
         if (trimmed.length() > 1000) {
+            log.warn("Rejected oversized assignment chat message assignmentId={} senderUserId={} length={}", assignmentId, senderUserId, trimmed.length());
             throw new RuntimeException("Message cannot exceed 1000 characters");
         }
 
@@ -53,6 +61,10 @@ public class AssignmentChatService {
         chatMessage.setMessageText(trimmed);
 
         AssignmentChatMessage saved = assignmentChatMessageRepository.save(chatMessage);
+        log.info("Assignment chat message saved assignmentId={} messageId={} senderUserId={}",
+            assignmentId,
+            saved.getMessageId(),
+            senderUserId);
 
         Long donorId = assignment.getFoodListing() != null && assignment.getFoodListing().getUser() != null
                 ? assignment.getFoodListing().getUser().getUserId()
@@ -68,8 +80,11 @@ public class AssignmentChatService {
                         "New assignment message",
                         sender.getUserName() + " sent a message about " + listingRef(assignment)
                 );
-            } catch (Exception ignored) {
-                // Chat should still work even if notifications fail.
+            } catch (Exception e) {
+                log.warn("Failed to create chat notification assignmentId={} recipientUserId={} error={}",
+                        assignmentId,
+                        recipientId,
+                        e.getMessage());
             }
         }
 
@@ -89,6 +104,7 @@ public class AssignmentChatService {
                 && (requesterUserId.equals(donorId) || requesterUserId.equals(volunteerId));
 
         if (!isParticipant) {
+            log.warn("Unauthorized assignment chat access assignmentId={} requesterUserId={}", assignmentId, requesterUserId);
             throw new RuntimeException("Unauthorized assignment chat access");
         }
 

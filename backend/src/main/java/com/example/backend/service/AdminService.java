@@ -18,15 +18,10 @@ public class AdminService {
 
     private final JwtService jwtService;
 
-    /**
-     * Validates the supplied admin credentials against values in application.properties.
-     * Returns a signed JWT with role ADMIN on success, or throws on failure.
-     */
     public String login(String adminId, String password) {
         if (!configuredAdminId.equals(adminId) || !configuredAdminPassword.equals(password)) {
             throw new RuntimeException("Invalid admin credentials.");
         }
-        // Use a synthetic userId of -1 to distinguish admin from regular users
         return jwtService.generateToken(-1L, "admin@system", "ADMIN");
     }
 }

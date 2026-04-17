@@ -6,6 +6,7 @@ const normalizeToken = (rawToken) => {
 };
 
 const decodeBase64Url = (value) => {
+  // JWT payload uses base64url; normalize to standard base64 before decoding.
   const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
   const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
   return atob(padded);
@@ -60,36 +61,23 @@ const patchAuth = async (endpoint, body) => {
   return data;
 };
 
-// ── Sign Up ──────────────────────────────────────────────────────────────────
 
-/** Step 1: send OTP to email for new account */
 export const signUpSendOtp = (userName, mobileNumber, emailId, role) =>
   post('/auth/signup/send-otp', { userName, mobileNumber, emailId, role });
 
-/** Step 2: verify OTP and create account. Returns { data: AuthResponse } */
 export const signUpVerify = (emailId, otp) =>
   post('/auth/signup/verify', { emailId, otp });
 
-// ── Login ────────────────────────────────────────────────────────────────────
 
-/** Step 1: send OTP to existing account's email */
 export const loginSendOtp = (emailId) =>
   post('/auth/login/send-otp', { emailId });
 
-/** Step 2: verify OTP and retrieve user. Returns { data: AuthResponse } */
 export const loginVerify = (emailId, otp) =>
   post('/auth/login/verify', { emailId, otp });
 
-/** Update authenticated user's profile in backend DB. */
 export const updateProfile = (userName, mobileNumber) =>
   patchAuth('/auth/profile', { userName, mobileNumber });
 
-// ── Session helpers ───────────────────────────────────────────────────────────
-
-/**
- * Persist the authenticated user (including JWT token) into localStorage.
- * @param {object} authData  The `data` field from an AuthResponse.
- */
 export const saveSession = (authData) => {
   const token = normalizeToken(
     authData?.token
@@ -110,23 +98,19 @@ export const saveSession = (authData) => {
   }));
 };
 
-/** Remove all auth data from localStorage (logout). */
 export const clearSession = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
 };
 
-/** Returns the stored JWT token or null. */
 export const getToken = () => normalizeToken(localStorage.getItem('token'));
 
-/** Returns the stored user object or null. */
 export const getUser = () => {
   const raw = localStorage.getItem('user');
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 };
 
-/** Merge and persist user fields in localStorage. Returns updated user or null. */
 export const updateSessionUser = (patch) => {
   const existingUser = getUser();
   if (!existingUser) return null;
@@ -153,10 +137,6 @@ const getCurrentPosition = () => new Promise((resolve, reject) => {
   );
 });
 
-/**
- * Ask for current location permission and persist coordinates in session.
- * Returns `{ granted, latitude, longitude }` so caller can optionally show UI feedback.
- */
 export const requestAndStoreCurrentLocation = async () => {
   try {
     const pos = await getCurrentPosition();
@@ -178,7 +158,6 @@ export const requestAndStoreCurrentLocation = async () => {
   }
 };
 
-/** Returns true when a non-expired token is present. */
 export const isAuthenticated = () => {
   const token = getToken();
   if (!token) return false;
@@ -186,7 +165,7 @@ export const isAuthenticated = () => {
     const parts = token.split('.');
     if (parts.length !== 3) return false;
 
-    // JWT uses base64url, so normalize before decoding.
+    // Trust expiry claim as milliseconds by converting standard JWT seconds -> ms.
     const payload = JSON.parse(decodeBase64Url(parts[1]));
     if (typeof payload.exp !== 'number') return false;
     return payload.exp * 1000 > Date.now();
@@ -195,10 +174,6 @@ export const isAuthenticated = () => {
   }
 };
 
-/**
- * Returns the Authorization header object to attach to fetch calls.
- * { Authorization: 'Bearer <token>' }
- */
 export const authHeader = () => {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};

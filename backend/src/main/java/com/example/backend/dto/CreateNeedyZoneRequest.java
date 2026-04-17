@@ -12,6 +12,5 @@ public class CreateNeedyZoneRequest {
     private String name;
     private Double latitude;
     private Double longitude;
-    // Optional: initial tag reason (SLUM, LABOUR_CAMP, NIGHT_SHELTER)
     private String tagReason;
 }

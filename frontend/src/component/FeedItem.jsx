@@ -13,6 +13,8 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+const MotionDiv = motion.div;
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: markerIcon2x,
@@ -83,14 +85,12 @@ const FeedItem = ({
     const [userPos, setUserPos] = useState(normalizedCurrentLocation);
     const [locationError, setLocationError] = useState(false);
 
-    // Track desktop / mobile
     useEffect(() => {
         const handler = () => setIsDesktop(window.innerWidth >= 768);
         window.addEventListener('resize', handler);
         return () => window.removeEventListener('resize', handler);
     }, []);
 
-    // Keep local position in sync with validated parent location data.
     useEffect(() => {
         if (normalizedCurrentLocation) {
             setUserPos(normalizedCurrentLocation);
@@ -100,7 +100,6 @@ const FeedItem = ({
         setUserPos(null);
     }, [normalizedCurrentLocation]);
 
-    // Fetch geolocation when card expands or zone picker is active
     useEffect(() => {
         if (!expanded && !showZonePicker) return;
         if (normalizedCurrentLocation) return;
@@ -221,20 +220,6 @@ const FeedItem = ({
         return directionsUrl();
     };
 
-    const formatTimeAgo = (dateString) => {
-        const now = new Date();
-        const itemDate = new Date(dateString);
-        const diffInMinutes = Math.floor((now - itemDate) / (1000 * 60));
-
-        if (diffInMinutes < 60) {
-            return `${diffInMinutes}m ago`;
-        } else if (diffInMinutes < 1440) {
-            return `${Math.floor(diffInMinutes / 60)}h ago`;
-        } else {
-            return `${Math.floor(diffInMinutes / 1440)}d ago`;
-        }
-    };
-
     const getButtonStyles = () => {
         return {
             base: "relative overflow-hidden rounded-full bg-[#FF8B77] text-white font-semibold text-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg active:scale-95",
@@ -262,24 +247,6 @@ const FeedItem = ({
         );
     };
 
-    const getExpiryTime = (expiryString) => {
-        const expiry = new Date(expiryString);
-        return expiry.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    };
-
-    const getStatusColor = () => {
-        switch (item.status) {
-            case 'available':
-                return 'text-green-400';
-            case 'claimed':
-                return 'text-yellow-400';
-            case 'expired':
-                return 'text-red-400';
-            default:
-                return 'text-gray-400';
-        }
-    };
-
     const handleClaimClick = () => {
         if (item.status !== 'available') return;
         if (isDesktop) {
@@ -304,7 +271,7 @@ const FeedItem = ({
 
     return (
         <div className="w-full mb-4 mx-auto">
-            <motion.div
+            <MotionDiv
                 layout
                 transition={{ layout: { type: 'spring', damping: 30, stiffness: 300 } }}
                 className="relative w-full overflow-hidden rounded-[25px] p-[10px] bg-[#FFECEA]"
@@ -317,10 +284,8 @@ const FeedItem = ({
                 )}
 
                 <div className="flex gap-[10px]">
-                    {/* Food Image */}
                     <div className="w-[35%] flex-shrink-0 relative">
                         <div className="relative w-full aspect-square">
-                            {/* Main Image */}
                             <img
                                 src={item.imageUrl || "/placeholder-food.jpg"}
                                 alt={item.description}
@@ -331,7 +296,6 @@ const FeedItem = ({
                                 }}
                             />
 
-                            {/* Veg / Non-Veg Icon Overlay */}
                             <div className="absolute top-3 right-3 bg-[#FFECEA] rounded-[6px] p-1 z-10">
                                 {item.vegetarian ? (
                                     <img src={VegIcon} alt="Vegetarian" className="w-6 h-6" />
@@ -342,9 +306,7 @@ const FeedItem = ({
                         </div>
                     </div>
 
-                    {/* Food Details */}
                     <div className="flex-1 flex flex-col justify-between">
-                        {/* Top Section */}
                         <div className="w-[60%]">
                             <h3 className="text-2xl font-semibold text-black">
                                 {item.description}
@@ -358,9 +320,7 @@ const FeedItem = ({
 
                             <div className="w-full h-[2px] bg-[#D9D9D9] mb-4"></div>
 
-                            {/* Details and Action Button Container */}
                             <div className="flex justify-between">
-                                {/* Details */}
                                 <div className="flex flex-col gap-6 flex-1">
                                     <div className="flex items-center gap-2 text-base">
                                         <img src={QuantityIcon} alt="Quantity" className="w-5 h-5" />
@@ -388,7 +348,6 @@ const FeedItem = ({
                                     </div>
                                 </div>
                                 
-                                {/* Action Button */}
                                 <div className="flex flex-col justify-end mr-[10px]">
                                     {item.status === 'available' && isOwner && (
                                         <button
@@ -430,10 +389,9 @@ const FeedItem = ({
                     </div>
                 </div>
 
-                {/* ── Desktop expanded detail section ── */}
                 <AnimatePresence initial={false}>
                     {expanded && isDesktop && (
-                        <motion.div
+                        <MotionDiv
                             key="desktop-detail"
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
@@ -444,7 +402,6 @@ const FeedItem = ({
                             <div className="mt-4 space-y-[10px]">
                                 <div className="w-full h-[1px]  bg-[#D9D9D9]" />
 
-                                {/* Donor Information */}
                                 <div className="w-full rounded-[20px] bg-white border border-[#FFE0DB] p-4">
                                     <h4 className="text-base font-bold text-gray-900 mb-3">Donor Information</h4>
                                     <div className="flex items-center gap-3 mb-3">
@@ -488,7 +445,6 @@ const FeedItem = ({
                                     )}
                                 </div>
 
-                                {/* Pickup Location Map */}
                                 <div className="w-full rounded-[20px] overflow-hidden bg-white border border-[#FFE0DB]">
                                     <div className="px-4 pt-4 pb-2 flex items-center justify-between">
                                         <h4 className="text-base font-bold text-gray-900">Pickup Location</h4>
@@ -552,7 +508,6 @@ const FeedItem = ({
                                     )}
                                 </div>
 
-                                {/* Confirm / Cancel Button */}
                                 {isOwner ? (
                                     <button
                                         onClick={() => onCancel?.(item.id || item.foodId)}
@@ -588,7 +543,7 @@ const FeedItem = ({
                                 </button>
                                 )}
                             </div>
-                        </motion.div>
+                        </MotionDiv>
                     )}
                 </AnimatePresence>
 
@@ -673,7 +628,7 @@ const FeedItem = ({
                         </button>
                     </div>
                 )}
-            </motion.div>
+            </MotionDiv>
         </div>
     );
 };

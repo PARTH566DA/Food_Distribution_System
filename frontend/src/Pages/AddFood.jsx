@@ -12,10 +12,7 @@ import ClockIcon from '../assets/clock.svg';
 import PackageIcon from '../assets/package.svg';
 import { addFood } from '../api/food';
 
-// For MapmyIndia, you would need their official plugin: @mappls/mappls-web-maps
-// Currently using CartoDB as it works without complex authentication
 
-// Fix for default marker icon in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -23,7 +20,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Child component to handle map click events
 const MapClickHandler = ({ onLocationSelect }) => {
   useMapEvents({
     click: (e) => {
@@ -58,7 +54,6 @@ const AddFood = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
-  // Default center: Ahmedabad coordinates
   const defaultCenter = [23.0225, 72.5714];
   const defaultZoom = 13;
 
@@ -86,7 +81,6 @@ const AddFood = () => {
   };
 
   const handleNumberInputChange = (field, value) => {
-    // Use parseInt for quantity (integers only), parseFloat for expiryTime (allows decimals)
     const numValue = field === 'quantity' ? parseInt(value) : parseFloat(value);
 
     const max = field === 'expiryTime' ? 120 : 50;
@@ -96,7 +90,6 @@ const AddFood = () => {
         [field]: Math.min(max, numValue)
       }));
     } else if (value === '') {
-      // Allow empty input temporarily
       setFormData(prev => ({
         ...prev,
         [field]: field === 'expiryTime' ? 0.5 : 1
@@ -126,7 +119,6 @@ const AddFood = () => {
         image: file
       }));
 
-      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -173,7 +165,6 @@ const AddFood = () => {
     );
   };
 
-  // Handle map click to select location
   const handleMapLocationSelect = (lat, lng) => {
     setFormData(prev => ({
       ...prev,
@@ -182,12 +173,6 @@ const AddFood = () => {
     }));
   };
 
-  // Toggle map visibility
-  const handlePickFromMap = () => {
-    setShowMap(!showMap);
-  };
-
-  // Auto-detect GPS location on component mount
   useEffect(() => {
     getGPSLocation();
   }, []);
@@ -196,7 +181,6 @@ const AddFood = () => {
     e.preventDefault();
     setSubmitError(null);
 
-    // Validate GPS coordinates
     if (!formData.latitude || !formData.longitude) {
       setGpsError("Please enable GPS location detection");
       return;
@@ -205,7 +189,6 @@ const AddFood = () => {
     setSubmitLoading(true);
     try {
       await addFood(formData);
-      // Navigate to home (feed) after successful submission
       navigate('/');
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -245,10 +228,8 @@ const AddFood = () => {
           <form onSubmit={handleSubmit}>
             <div className="w-full overflow-hidden rounded-[25px] p-[10px] bg-[#FFECEA]">
               <div className="flex gap-[10px]">
-                {/* Image Upload Section */}
                 <div className="w-[35%] flex-shrink-0 relative">
                   <div className="relative w-full aspect-square">
-                    {/* Image Preview or Upload Placeholder */}
                     <label
                       htmlFor="image-upload"
                       className="w-full h-full rounded-[25px] bg-white flex items-center justify-center cursor-pointer hover:bg-white/70 transition-all overflow-hidden"
@@ -276,7 +257,6 @@ const AddFood = () => {
                       className="hidden"
                     />
 
-                    {/* Veg / Non-Veg Toggle */}
                     <div className="absolute top-3 right-3 flex gap-2 z-10">
                       <button
                         type="button"
@@ -298,9 +278,7 @@ const AddFood = () => {
                   </div>
                 </div>
 
-                {/* Form Fields */}
                 <div className="flex-1 flex flex-col mt-[10px] justify-between">
-                  {/* Top Section - Description and Location */}
                   <div className="w-full">
                     <input
                       type="text"
@@ -326,9 +304,7 @@ const AddFood = () => {
                   <div>
                     <div className="w-full h-[2px] bg-[#D9D9D9] mb-4"></div>
 
-                    {/* Details and Submit Button Container */}
                     <div className="flex justify-between">
-                      {/* Details */}
                       <div className="flex flex-col gap-3 flex-1">
                         <div className="flex items-center gap-2 text-base">
                           <img src={QuantityIcon} alt="Quantity" className="w-5 h-5" />
@@ -473,7 +449,6 @@ const AddFood = () => {
                         </div>
                       </div>
 
-                      {/* Submit Button */}
                       <div className="flex flex-col justify-end mr-[10px]">
                         {renderSubmitButton()}
                       </div>
@@ -483,14 +458,12 @@ const AddFood = () => {
               </div>
             </div>
 
-            {/* Submit Error */}
             {submitError && (
               <div className="w-full mt-4 px-4 py-3 bg-red-100 border border-red-300 text-red-700 rounded-xl text-sm">
                 {submitError}
               </div>
             )}
 
-            {/* Show Map Button - appears when map is hidden */}
             {!showMap && (
               <div className="w-full mt-6 flex justify-center">
                 <button
@@ -506,7 +479,6 @@ const AddFood = () => {
               </div>
             )}
 
-            {/* Map Section with GPS Controls */}
             {showMap && (
               <div className="w-full mt-6 rounded-[25px] overflow-hidden relative" style={{ height: '400px' }}>
                 <MapContainer
@@ -526,7 +498,6 @@ const AddFood = () => {
                   )}
                 </MapContainer>
                 
-                {/* GPS Info Overlay */}
                 <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-[#FFECEA] backdrop-blur-sm rounded-xl shadow-lg p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2">

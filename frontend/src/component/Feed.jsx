@@ -37,7 +37,6 @@ const haversineDistanceKm = (fromPos, toPos) => {
 };
 
 const Feed = ({ pageSize = 5 }) => {
-  const [page, setPage] = useState(0);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -74,6 +73,7 @@ const Feed = ({ pageSize = 5 }) => {
     ? [currentLatitude, currentLongitude]
     : null;
   const loaderRef = useRef();
+  const nextPageRef = useRef(1);
 
   const getItemId = (item) => item.id ?? item.foodId;
 
@@ -98,23 +98,20 @@ const Feed = ({ pageSize = 5 }) => {
     return true;
   };
 
-  // Load initial page
   useEffect(() => {
+    nextPageRef.current = 1;
     loadPage(0, true);
   }, []);
 
-  // Intersection Observer for infinite scroll
   useEffect(() => {
     if (!loaderRef.current || !hasMore || loading) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
-          setPage(prevPage => {
-            const nextPage = prevPage + 1;
-            loadPage(nextPage, false);
-            return nextPage;
-          });
+          const nextPage = nextPageRef.current;
+          loadPage(nextPage, false);
+          nextPageRef.current += 1;
         }
       },
       { 
@@ -173,7 +170,7 @@ const Feed = ({ pageSize = 5 }) => {
         }))
         .filter((zone) => Number.isFinite(zone.needyZoneId));
       setZones(activeZones);
-    } catch (err) {
+    } catch {
       setZonesError('Failed to load needy zones. You can still continue without selecting one.');
     } finally {
       setZonesLoading(false);
@@ -199,7 +196,6 @@ const Feed = ({ pageSize = 5 }) => {
         needyZoneId: claimOptions.needyZoneId ?? null,
       });
       
-      // Update the item status locally
       setItems(prevItems =>
         prevItems.map(item =>
           getItemId(item) === foodId
@@ -244,7 +240,7 @@ const Feed = ({ pageSize = 5 }) => {
   };
 
   const handleRefresh = () => {
-    setPage(0);
+    nextPageRef.current = 1;
     setItems([]);
     setHasMore(true);
     setError(null);
@@ -299,7 +295,6 @@ const Feed = ({ pageSize = 5 }) => {
   return (
     <div className="w-full">
 
-      {/* Error banner (if there are items but new page failed) */}
       {error && items.length > 0 && (
         <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg backdrop-blur-sm">
           <p className="text-red-300 text-sm">{error}</p>
@@ -365,7 +360,6 @@ const Feed = ({ pageSize = 5 }) => {
         </div>
       </GlassSurface>
 
-      {/* Feed Items */}
       <div className="space-y-4">
         {filteredItems.map((item) => (
           <FeedItem
@@ -392,7 +386,6 @@ const Feed = ({ pageSize = 5 }) => {
         ))}
       </div>
 
-      {/* Loading States */}
       {loading && items.length === 0 && (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
@@ -412,19 +405,16 @@ const Feed = ({ pageSize = 5 }) => {
         </div>
       )}
 
-      {/* Bottom Loading */}
       {loading && items.length > 0 && (
         <div className="flex justify-center py-6">
           <div className="text-white/60 text-sm">Loading more...</div>
         </div>
       )}
 
-      {/* Infinite Scroll Trigger */}
       {hasMore && !loading && (
         <div ref={loaderRef} className="h-10" />
       )}
 
-      {/* Empty State */}
       {!loading && availableItems.length === 0 && !error && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <h3 className="text-white font-medium mb-2">No food items available</h3>
@@ -445,7 +435,6 @@ const Feed = ({ pageSize = 5 }) => {
         </div>
       )}
 
-      {/* Detail Modal */}
       <AnimatePresence>
         {selectedItem && (
           <FoodDetailModal
