@@ -25,9 +25,13 @@ const post = async (endpoint, body) => {
   }
 
   let data;
+  const responseText = await res.text();
   try {
-    data = await res.json();
+    data = responseText ? JSON.parse(responseText) : null;
   } catch {
+    if (!res.ok) {
+      throw new Error(responseText || `Server error (${res.status}). Please try again.`);
+    }
     throw new Error(`Server error (${res.status}). Please try again.`);
   }
 
@@ -51,9 +55,13 @@ const patchAuth = async (endpoint, body) => {
   }
 
   let data;
+  const responseText = await res.text();
   try {
-    data = await res.json();
+    data = responseText ? JSON.parse(responseText) : null;
   } catch {
+    if (!res.ok) {
+      throw new Error(responseText || `Server error (${res.status}). Please try again.`);
+    }
     throw new Error(`Server error (${res.status}). Please try again.`);
   }
 
