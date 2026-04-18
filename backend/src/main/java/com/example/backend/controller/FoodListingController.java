@@ -271,6 +271,13 @@ public class FoodListingController {
                 userId = jwtService.extractUserId(authHeader.substring(7));
             }
 
+            if (userId == null) {
+                log.warn("Unauthorized add food listing request");
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Unauthorized"));
+            }
+
             log.info("API add food listing request userId={} quantity={} location={}", userId, quantity, location);
 
             FoodListing foodListing = foodListingService.addFoodListing(
@@ -281,6 +288,11 @@ public class FoodListingController {
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(ApiResponse.success("Food listing created successfully", dto));
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid add food listing request error={}", e.getMessage());
+                return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
                     log.error("Unexpected error while creating food listing", e);
             return ResponseEntity

@@ -13,9 +13,9 @@ import com.example.backend.repository.FoodAssignmentRepository;
 import com.example.backend.repository.NeedyZonesRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.VolunteerRepository;
+import com.example.backend.service.storage.ImageStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,15 +24,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,9 +40,7 @@ public class FoodListingService {
     private final FoodAssignmentRepository foodAssignmentRepository;
     private final NeedyZonesRepository needyZonesRepository;
     private final NotificationService notificationService;
-
-    @Value("${app.upload.dir:uploads}")
-    private String uploadDir;
+    private final ImageStorageService imageStorageService;
 
 
     @Transactional()
@@ -263,33 +255,11 @@ public class FoodListingService {
         }
 
         if (image != null && !image.isEmpty()) {
-            String imageUrl = saveImage(image);
+            String imageUrl = imageStorageService.storeFoodImage(image);
             foodListing.setImageUrl(imageUrl);
         }
 
         return foodListingRepository.save(foodListing);
-    }
-
-    private String saveImage(MultipartFile image) {
-        try {
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            String originalFilename = image.getOriginalFilename();
-            String extension = (originalFilename != null && originalFilename.contains("."))
-                    ? originalFilename.substring(originalFilename.lastIndexOf('.'))
-                    : ".jpg";
-            String filename = UUID.randomUUID() + extension;
-
-            Path filePath = uploadPath.resolve(filename);
-            Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            return "/uploads/" + filename;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save image: " + e.getMessage());
-        }
     }
 
     @Scheduled(fixedRate = 60000)

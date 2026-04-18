@@ -42,7 +42,4 @@ public class FoodAssignment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "volunteer_user_id")
     private Volunteer volunteer;
-
-    @OneToOne(mappedBy = "assignment", cascade = CascadeType.ALL)
-    private DeliveryProof deliveryProof;
 }

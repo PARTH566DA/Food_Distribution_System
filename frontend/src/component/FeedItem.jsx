@@ -8,6 +8,7 @@ import QuantityIcon from '../assets/Group.svg';
 import ClockIcon from '../assets/clock.svg';
 import PackageIcon from '../assets/package.svg';
 import PinIcon from '../assets/Pin.svg';
+import { resolveMediaUrl } from '../api/media';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -287,7 +288,7 @@ const FeedItem = ({
                     <div className="w-[35%] flex-shrink-0 relative">
                         <div className="relative w-full aspect-square">
                             <img
-                                src={item.imageUrl || "/placeholder-food.jpg"}
+                                src={resolveMediaUrl(item.imageUrl) || "/placeholder-food.jpg"}
                                 alt={item.description}
                                 className="w-full h-full rounded-[25px] object-cover"
                                 onError={(e) => {

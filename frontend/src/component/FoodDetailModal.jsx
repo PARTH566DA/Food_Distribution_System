@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { resolveMediaUrl } from '../api/media';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
@@ -125,7 +126,7 @@ const FoodDetailModal = ({ item, onClose, onConfirm, confirming }) => {
                         <div className="w-full rounded-[25px] overflow-hidden bg-[#FFECEA] p-4 mb-5">
                             <div className="relative w-full rounded-[20px] overflow-hidden mb-4" style={{ aspectRatio: '16/9' }}>
                                 <img
-                                    src={item.imageUrl || '/placeholder-food.jpg'}
+                                    src={resolveMediaUrl(item.imageUrl) || '/placeholder-food.jpg'}
                                     alt={item.description}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {

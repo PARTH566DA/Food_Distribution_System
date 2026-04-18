@@ -54,9 +54,6 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Volunteer volunteer;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Ngo ngo;
-
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
     private List<NeedyZones> createdZones;
 
