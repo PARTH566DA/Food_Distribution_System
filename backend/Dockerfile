@@ -1,13 +1,19 @@
-# Stage 1: Build the JAR
 FROM eclipse-temurin:17-jdk-jammy AS build
 WORKDIR /app
-COPY . .
-RUN chmod +x ./mvnw
+
+# Copy wrapper and pom first to cache dependencies
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw
+# Download dependencies (this speeds up future builds)
+RUN ./mvnw dependency:go-offline
+
+# Copy source and build
+COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
-# Stage 2: Run the JAR
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Render uses the PORT env var, Spring needs to know
+ENTRYPOINT ["java", "-Xmx512m", "-Dserver.port=${PORT}", "-jar", "app.jar"]
