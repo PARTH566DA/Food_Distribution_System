@@ -6,7 +6,7 @@ import Notification from './Pages/Notification';
 import LocationSelector from './component/LocationSelector';
 import SignUp from './Pages/SignUp';
 import Login from './Pages/Login';
-import Map from './Pages/map';
+import Map from './Pages/Map';
 import Admin from './Pages/Admin';
 import History from './Pages/History';
 import { isAuthenticated } from './api/auth';
