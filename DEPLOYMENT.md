@@ -26,10 +26,13 @@ Important backend values:
 - DB_URL
 - DB_USERNAME
 - DB_PASSWORD
-- JWT_SECRET (strong, base64-encoded secret)
+- JWT_SECRET (strong, base64-encoded secret, 32+ bytes)
 - ADMIN_PASSWORD (do not keep default)
 - APP_PUBLIC_BASE_URL (your Render backend URL)
 - APP_UPLOAD_DIR=/var/data/uploads (when using Render persistent disk)
+
+Generate a secure JWT secret (example):
+- `openssl rand -base64 32`
 
 Important frontend value:
 - VITE_API_BASE_URL=https://<your-render-backend>.onrender.com/api

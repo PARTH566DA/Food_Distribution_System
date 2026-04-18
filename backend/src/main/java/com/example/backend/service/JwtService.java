@@ -3,14 +3,19 @@ package com.example.backend.service;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class JwtService {
 
     @Value("${jwt.secret}")
@@ -18,6 +23,8 @@ public class JwtService {
 
     @Value("${jwt.expiration-ms}")
     private long expirationMs;
+
+    private volatile SecretKey signingKey;
 
 
     public String generateToken(Long userId, String email, String role) {
@@ -68,7 +75,45 @@ public class JwtService {
     }
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        return Keys.hmacShaKeyFor(keyBytes);
+        if (signingKey != null) {
+            return signingKey;
+        }
+
+        synchronized (this) {
+            if (signingKey != null) {
+                return signingKey;
+            }
+
+            byte[] configuredBytes = decodeConfiguredSecret(secret);
+            if (configuredBytes.length < 32) {
+                log.warn("JWT secret is shorter than 256 bits. Deriving a secure HS256 key from configured secret.");
+                configuredBytes = sha256(configuredBytes);
+            }
+
+            signingKey = Keys.hmacShaKeyFor(configuredBytes);
+            return signingKey;
+        }
+    }
+
+    private byte[] decodeConfiguredSecret(String configuredSecret) {
+        String value = configuredSecret == null ? "" : configuredSecret.trim();
+        if (value.isEmpty()) {
+            throw new IllegalStateException("JWT secret is not configured. Set JWT_SECRET environment variable.");
+        }
+
+        try {
+            return Decoders.BASE64.decode(value);
+        } catch (IllegalArgumentException ignored) {
+            return value.getBytes(StandardCharsets.UTF_8);
+        }
+    }
+
+    private byte[] sha256(byte[] input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return digest.digest(input);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
     }
 }
