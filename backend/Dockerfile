@@ -16,5 +16,5 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
 
-# Render uses the PORT env var
-ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-Dspring.datasource.url=${DB_URL}", "-Dspring.datasource.username=${DB_USERNAME}", "-Dspring.datasource.password=${DB_PASSWORD}", "-jar", "app.jar"]
+# Spring Boot resolves PORT/DB_* from environment via application.properties placeholders.
+ENTRYPOINT ["java", "-jar", "app.jar"]
