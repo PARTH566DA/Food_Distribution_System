@@ -29,7 +29,9 @@ Important backend values:
 - JWT_SECRET (strong, base64-encoded secret, 32+ bytes)
 - ADMIN_PASSWORD (do not keep default)
 - APP_PUBLIC_BASE_URL (your Render backend URL)
-- APP_UPLOAD_DIR=/var/data/uploads (when using Render persistent disk)
+- APP_STORAGE_TYPE=local (or cloudinary)
+- APP_UPLOAD_DIR=/var/data/uploads (when using local storage on Render persistent disk)
+- CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET (when using cloudinary)
 
 Generate a secure JWT secret (example):
 - `openssl rand -base64 32`
@@ -51,7 +53,14 @@ Important frontend value:
    - Mount path: /var/data
    - Size: at least 1 GB
    - Set APP_UPLOAD_DIR=/var/data/uploads
+   - Keep APP_STORAGE_TYPE=local
 6. Deploy.
+
+Optional Cloudinary mode (recommended for production image hosting):
+- Set APP_STORAGE_TYPE=cloudinary
+- Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+- Optional: set CLOUDINARY_FOLDER (default: food-distribution/food-images)
+- In this mode, backend uploads image binaries to Cloudinary and stores only returned URL in DB.
 
 After deployment, set:
 - APP_PUBLIC_BASE_URL=https://<your-render-backend>.onrender.com
@@ -86,7 +95,9 @@ Also ensure these are strong in production:
 1. Open frontend URL from Vercel.
 2. Test signup/login OTP flow.
 3. Add a food listing with image.
-4. Confirm image URL loads from backend /uploads path.
+4. Confirm image URL loads:
+   - local mode: backend /uploads path
+   - cloudinary mode: cloudinary secure URL
 5. Check backend logs in Render for errors.
 
 ## 7) Updating Code Later
@@ -100,4 +111,5 @@ Also ensure these are strong in production:
 - 401/403 issues: verify JWT_SECRET and Authorization header flow.
 - CORS errors: verify VITE_API_BASE_URL and backend URL correctness.
 - Uploads disappearing: confirm Render persistent disk is mounted and APP_UPLOAD_DIR points to /var/data/uploads.
+- Cloudinary upload failed: verify APP_STORAGE_TYPE=cloudinary and all CLOUDINARY_* variables are set correctly.
 - DB connection failed: verify DB_URL format and credentials.
