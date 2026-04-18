@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Data
@@ -27,6 +28,7 @@ public class FoodListingDTO {
     private String createdAt;
     private String address;
     private String expiryTime;
+    private String expiresAt;
     private String status;
     private String workflowStatus;
     private Double pickupLatitude;
@@ -57,6 +59,7 @@ public class FoodListingDTO {
                 .createdAt(formatDateTime(foodListing.getCreatedAt()))
                 .address(foodListing.getAddress())
                 .expiryTime(String.valueOf(foodListing.getExpiry()))
+                .expiresAt(calculateExpiresAt(foodListing.getCreatedAt(), foodListing.getExpiry()))
                 .status(mapStatus(foodListing.getStatus()))
                 .workflowStatus(foodListing.getStatus() != null
                     ? foodListing.getStatus().name().toLowerCase()
@@ -97,7 +100,15 @@ public class FoodListingDTO {
 
     private static String formatDateTime(LocalDateTime dateTime) {
         if (dateTime == null) return null;
-        return dateTime.format(DateTimeFormatter.ISO_DATE_TIME);
+        return dateTime
+                .atZone(ZoneId.systemDefault())
+                .toOffsetDateTime()
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
+
+    private static String calculateExpiresAt(LocalDateTime createdAt, Integer expiryHours) {
+        if (createdAt == null || expiryHours == null) return null;
+        return formatDateTime(createdAt.plusHours(expiryHours.longValue()));
     }
 
     private static String mapStatus(Status status) {

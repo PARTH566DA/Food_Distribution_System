@@ -239,12 +239,18 @@ public class FoodListingService {
             MultipartFile image,
             Long userId
     ) {
+        if (expiryTime == null || expiryTime <= 0) {
+            throw new IllegalArgumentException("Expiry time must be greater than 0 hours");
+        }
+
+        int normalizedExpiryHours = Math.max(1, (int) Math.ceil(expiryTime));
+
         FoodListing foodListing = new FoodListing();
         foodListing.setVegetarian(vegetarian);
         foodListing.setIsPackaged(packed);
         foodListing.setDescription(description);
         foodListing.setQuantity(quantity);
-        foodListing.setExpiry(expiryTime.intValue());
+        foodListing.setExpiry(normalizedExpiryHours);
         foodListing.setAddress(address);
         foodListing.setPickupLatitude(latitude);
         foodListing.setPickupLongitude(longitude);

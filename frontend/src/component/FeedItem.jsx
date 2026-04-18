@@ -333,11 +333,25 @@ const FeedItem = ({
                                         <span className="font-semibold text-black">Fresh:</span>
                                         <span className="text-gray-700">
                                             {(() => {
-                                                const now = new Date();
-                                                const created = new Date(item.createdAt);
-                                                const hoursElapsed = (now - created) / (1000 * 60 * 60);
-                                                const hoursRemaining = Math.max(0, item.expiryTime - hoursElapsed);
-                                                return Math.fround(hoursRemaining).toFixed(1);
+                                                const nowMs = Date.now();
+                                                const expiryHours = Number(item.expiryTime);
+
+                                                if (item.expiresAt) {
+                                                    const expiresAtMs = new Date(item.expiresAt).getTime();
+                                                    if (Number.isFinite(expiresAtMs)) {
+                                                        const remaining = Math.max(0, (expiresAtMs - nowMs) / (1000 * 60 * 60));
+                                                        return remaining.toFixed(1);
+                                                    }
+                                                }
+
+                                                const createdMs = new Date(item.createdAt).getTime();
+                                                if (!Number.isFinite(createdMs) || !Number.isFinite(expiryHours)) {
+                                                    return "0.0";
+                                                }
+
+                                                const hoursElapsed = (nowMs - createdMs) / (1000 * 60 * 60);
+                                                const hoursRemaining = Math.max(0, expiryHours - hoursElapsed);
+                                                return hoursRemaining.toFixed(1);
                                             })()} hrs.
                                         </span>
                                     </div>

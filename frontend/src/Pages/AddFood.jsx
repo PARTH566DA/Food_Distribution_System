@@ -69,19 +69,19 @@ const AddFood = () => {
     const max = field === 'expiryTime' ? 120 : 50;
     setFormData(prev => ({
       ...prev,
-      [field]: Math.min(max, prev[field] + (field === 'expiryTime' ? 0.5 : 1))
+      [field]: Math.min(max, prev[field] + 1)
     }));
   };
 
   const decrementValue = (field) => {
     setFormData(prev => ({
       ...prev,
-      [field]: Math.max(field === 'expiryTime' ? 0.5 : 1, prev[field] - (field === 'expiryTime' ? 0.5 : 1))
+      [field]: Math.max(1, prev[field] - 1)
     }));
   };
 
   const handleNumberInputChange = (field, value) => {
-    const numValue = field === 'quantity' ? parseInt(value) : parseFloat(value);
+    const numValue = parseInt(value, 10);
 
     const max = field === 'expiryTime' ? 120 : 50;
     if (!isNaN(numValue) && numValue > 0) {
@@ -92,7 +92,7 @@ const AddFood = () => {
     } else if (value === '') {
       setFormData(prev => ({
         ...prev,
-        [field]: field === 'expiryTime' ? 0.5 : 1
+        [field]: 1
       }));
     }
   };
@@ -389,9 +389,9 @@ const AddFood = () => {
                                   autoFocus
                                   className="w-full h-full text-center text-black text-lg font-normal bg-transparent border-none outline-none"
                                   style={{ fontFamily: 'inherit', minWidth: '60px' }}
-                                  min="0.5"
+                                  min="1"
                                   max="120"
-                                  step="0.5"
+                                  step="1"
                                 />
                               ) : (
                                 <div className="hover:opacity-70 transition-opacity">
