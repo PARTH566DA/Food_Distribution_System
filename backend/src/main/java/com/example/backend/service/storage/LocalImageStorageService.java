@@ -2,7 +2,7 @@ package com.example.backend.service.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.storage.type", havingValue = "local", matchIfMissing = true)
+@ConditionalOnMissingBean(ImageStorageService.class)
 public class LocalImageStorageService implements ImageStorageService {
 
     @Value("${app.upload.dir:uploads}")
