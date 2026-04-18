@@ -16,6 +16,16 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 const MotionDiv = motion.div;
 
+const parseApiDateToMs = (value) => {
+    if (!value || typeof value !== 'string') return Number.NaN;
+    const trimmed = value.trim();
+    if (!trimmed) return Number.NaN;
+
+    const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(trimmed);
+    const normalized = hasTimezone ? trimmed : `${trimmed}Z`;
+    return new Date(normalized).getTime();
+};
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: markerIcon2x,
@@ -337,14 +347,14 @@ const FeedItem = ({
                                                 const expiryHours = Number(item.expiryTime);
 
                                                 if (item.expiresAt) {
-                                                    const expiresAtMs = new Date(item.expiresAt).getTime();
+                                                    const expiresAtMs = parseApiDateToMs(item.expiresAt);
                                                     if (Number.isFinite(expiresAtMs)) {
                                                         const remaining = Math.max(0, (expiresAtMs - nowMs) / (1000 * 60 * 60));
                                                         return remaining.toFixed(1);
                                                     }
                                                 }
 
-                                                const createdMs = new Date(item.createdAt).getTime();
+                                                const createdMs = parseApiDateToMs(item.createdAt);
                                                 if (!Number.isFinite(createdMs) || !Number.isFinite(expiryHours)) {
                                                     return "0.0";
                                                 }

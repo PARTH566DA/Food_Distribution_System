@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 @Data
@@ -101,8 +101,7 @@ public class FoodListingDTO {
     private static String formatDateTime(LocalDateTime dateTime) {
         if (dateTime == null) return null;
         return dateTime
-                .atZone(ZoneId.systemDefault())
-                .toOffsetDateTime()
+                .atOffset(ZoneOffset.UTC)
                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
