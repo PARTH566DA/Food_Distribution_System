@@ -1,5 +1,26 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
+const hasPlaceholderApiUrl = () => {
+  const value = (API_BASE_URL || '').toLowerCase();
+  return value.includes('your_backend_service') || value.includes('<your-render-backend>');
+};
+
+const ensureApiUrlConfigured = () => {
+  if (hasPlaceholderApiUrl()) {
+    throw new Error('VITE_API_BASE_URL is using a placeholder URL. Set it to your real backend URL, e.g. https://your-backend.onrender.com/api.');
+  }
+};
+
+const resolveApiError = (status, data, responseText, endpoint) => {
+  if (status === 403 && endpoint.includes('/auth/login/send-otp')) {
+    return 'Request blocked (403). Check VITE_API_BASE_URL points to your real backend service and verify that /api/auth/login/send-otp is publicly accessible in deployed backend security config.';
+  }
+
+  if (data?.message) return data.message;
+  if (responseText) return responseText;
+  return `Error ${status}`;
+};
+
 const normalizeToken = (rawToken) => {
   if (!rawToken || typeof rawToken !== 'string') return null;
   return rawToken.replace(/^Bearer\s+/i, '').trim() || null;
@@ -13,6 +34,8 @@ const decodeBase64Url = (value) => {
 };
 
 const post = async (endpoint, body) => {
+  ensureApiUrlConfigured();
+
   let res;
   try {
     res = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -30,16 +53,18 @@ const post = async (endpoint, body) => {
     data = responseText ? JSON.parse(responseText) : null;
   } catch {
     if (!res.ok) {
-      throw new Error(responseText || `Server error (${res.status}). Please try again.`);
+      throw new Error(resolveApiError(res.status, null, responseText, endpoint));
     }
     throw new Error(`Server error (${res.status}). Please try again.`);
   }
 
-  if (!res.ok) throw new Error(data.message || `Error ${res.status}`);
+  if (!res.ok) throw new Error(resolveApiError(res.status, data, responseText, endpoint));
   return data;
 };
 
 const patchAuth = async (endpoint, body) => {
+  ensureApiUrlConfigured();
+
   let res;
   try {
     res = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -60,12 +85,12 @@ const patchAuth = async (endpoint, body) => {
     data = responseText ? JSON.parse(responseText) : null;
   } catch {
     if (!res.ok) {
-      throw new Error(responseText || `Server error (${res.status}). Please try again.`);
+      throw new Error(resolveApiError(res.status, null, responseText, endpoint));
     }
     throw new Error(`Server error (${res.status}). Please try again.`);
   }
 
-  if (!res.ok) throw new Error(data.message || `Error ${res.status}`);
+  if (!res.ok) throw new Error(resolveApiError(res.status, data, responseText, endpoint));
   return data;
 };
 
