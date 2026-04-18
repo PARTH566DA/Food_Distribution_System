@@ -17,4 +17,4 @@ WORKDIR /app
 COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
 
 # Spring Boot resolves PORT/DB_* from environment via application.properties placeholders.
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-4000} -jar app.jar"]
