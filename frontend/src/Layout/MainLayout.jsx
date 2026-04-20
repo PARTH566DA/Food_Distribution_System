@@ -144,7 +144,7 @@ const MainLayout = ({
                             transition-all duration-500 ease-in-out
                             ${isNotificationOpen 
                                 ? 'left-1/2 top-[80px] bottom-[8px] w-[96%] -translate-x-1/2 md:top-[105px] md:bottom-[12px] md:w-[60%]' 
-                                : 'bottom-[84px] left-3 w-11 h-11 md:bottom-[90px] md:left-5 md:w-12 md:h-12'
+                                : 'bottom-3 right-3 w-11 h-11 md:bottom-[90px] md:left-5 md:right-auto md:w-12 md:h-12'
                             }
                         `}
                     >
@@ -215,7 +215,7 @@ const MainLayout = ({
                     <button
                         type="button"
                         onClick={toggleProfile}
-                        className="absolute bottom-3 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-5 md:bottom-5 z-30 flex items-center gap-2 bg-[#FFECEA] rounded-2xl px-3 py-2.5 md:px-4 md:py-3 shadow-md hover:bg-[#FED0CB] transition-colors max-w-[95%]"
+                        className="absolute bottom-3 left-3 md:left-5 md:bottom-5 z-30 flex items-center gap-2 bg-[#FFECEA] rounded-2xl px-3 py-2.5 md:px-4 md:py-3 shadow-md hover:bg-[#FED0CB] transition-colors"
                     >
                         <div className="w-8 h-8 rounded-full bg-[#FED0CB] flex items-center justify-center shrink-0">
                             <span className="text-sm font-bold text-[#FF8B77]">
@@ -223,7 +223,7 @@ const MainLayout = ({
                             </span>
                         </div>
 
-                        <div className="flex flex-col leading-tight">
+                        <div className="hidden md:flex flex-col leading-tight">
                             <span className="text-xs font-semibold text-[#6B5454] max-w-[110px] truncate">
                                 {currentUser.userName}
                             </span>
@@ -232,7 +232,7 @@ const MainLayout = ({
                             </span>
                         </div>
 
-                        <div className="w-px h-6 bg-[#D9C7C3] mx-1" />
+                        <div className="hidden md:block w-px h-6 bg-[#D9C7C3] mx-1" />
 
                         <span
                             role="button"
@@ -248,7 +248,7 @@ const MainLayout = ({
                                     handleLogout();
                                 }
                             }}
-                            className="text-xs font-semibold text-[#9B7B75] hover:text-[#FF8B77] transition-colors"
+                            className="hidden md:inline text-xs font-semibold text-[#9B7B75] hover:text-[#FF8B77] transition-colors"
                         >
                             Logout
                         </span>

@@ -559,17 +559,17 @@ const History = () => {
                     width="100%"
                     height="auto"
                     borderRadius={999}
-                    backgroundOpacity={0.52}
+                    backgroundOpacity={0.82}
                     blur={1}
                     saturation={1.4}
 
-                    className="mb-4 md:mb-5 w-full sticky bg-[#FDE6E2]/80 top-0 z-20"
+                    className="mb-4 md:mb-5 w-full sticky bg-[#FDE6E2] top-0 z-20"
                 >
                     <div className="inline-flex rounded-full w-full">
                         <button
                             onClick={() => setActiveTab(TABS.POSTED)}
                                 className={`rounded-full w-1/2 px-3 py-2 text-xs md:px-4 md:text-sm font-semibold transition-colors ${
-                                activeTab === TABS.POSTED ? "bg-[#FF8B77] text-white" : "text-[#7A5F5A]"
+                                activeTab === TABS.POSTED ? "bg-[#FF8B77] text-white" : "bg-white text-[#6A5450] border border-[#E8D1CC]"
                             }`}
                         >
                             Orders Posted By Me
@@ -577,7 +577,7 @@ const History = () => {
                         <button
                             onClick={() => setActiveTab(TABS.ACCEPTED)}
                                 className={`rounded-full w-1/2 px-3 py-2 text-xs md:px-4 md:text-sm font-semibold transition-colors ${
-                                activeTab === TABS.ACCEPTED ? "bg-[#FF8B77] text-white" : "text-[#7A5F5A]"
+                                activeTab === TABS.ACCEPTED ? "bg-[#FF8B77] text-white" : "bg-white text-[#6A5450] border border-[#E8D1CC]"
                             }`}
                         >
                             Food Accepted By Me

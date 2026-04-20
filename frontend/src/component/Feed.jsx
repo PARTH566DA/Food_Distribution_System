@@ -305,16 +305,16 @@ const Feed = ({ pageSize = 5 }) => {
         width="100%"
         height="auto"
         borderRadius={22}
-        backgroundOpacity={0.12}
+        backgroundOpacity={0.58}
         blur={1}
         saturation={1}
-        className="sticky top-0 z-40 mb-4 w-full"
+        className="sticky top-0 z-40 mb-3 md:mb-4 w-full bg-[#FFE7E3] md:bg-transparent"
       >
-        <div className="w-full rounded-[22px] bg-transparent px-4 py-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="w-full rounded-[22px] bg-transparent px-3 py-3 md:px-4 md:py-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 md:gap-3">
             <div>
-              <p className="text-sm font-semibold tracking-wide text-[#6B5454]">Distance Filter</p>
-              <p className="text-xs text-[#8D746E]">
+              <p className="text-xs md:text-sm font-semibold tracking-wide text-[#6B5454]">Distance Filter</p>
+              <p className="hidden md:block text-xs text-[#8D746E]">
                 {distanceFilter === 'all'
                   ? `${availableItems.length} items available`
                   : `${filteredItems.length} items match this range`}
@@ -324,14 +324,14 @@ const Feed = ({ pageSize = 5 }) => {
               type="button"
               onClick={handleRequestLocationPermission}
               disabled={currentLocation || requestingLocation}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/45 bg-transparent px-3 py-1.5 text-[11px] font-semibold text-[#7D6360] transition-colors disabled:cursor-default disabled:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#E7CDC7] bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-[#7D6360] transition-colors disabled:cursor-default disabled:opacity-90"
             >
               <span className={`h-2 w-2 rounded-full ${currentLocation ? 'bg-emerald-500' : 'bg-amber-500'}`} />
               {currentLocation ? 'Location ready' : requestingLocation ? 'Requesting location...' : 'Location needed (click to enable)'}
             </button>
           </div>
 
-          <div className="mt-3 grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="mt-2 flex w-full gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mt-3 md:grid md:grid-cols-3 md:gap-2 lg:grid-cols-6">
             {DISTANCE_FILTERS.map((filterOption) => {
               const isActive = distanceFilter === filterOption.value;
               return (
@@ -340,10 +340,10 @@ const Feed = ({ pageSize = 5 }) => {
                   type="button"
                   onClick={() => setDistanceFilter(filterOption.value)}
                   disabled={!currentLocation}
-                  className={`w-full rounded-full px-3 py-1.5 text-center text-xs font-semibold transition-all duration-200 ${
+                  className={`min-w-max whitespace-nowrap rounded-full px-3 py-1.5 text-center text-xs font-semibold transition-all duration-200 md:w-full ${
                     isActive
                       ? 'bg-[#FF8B77] text-white shadow-sm'
-                      : 'border border-white/45 bg-transparent text-[#7D6360] hover:bg-white/20'
+                      : 'border border-[#E7CDC7] bg-white/70 text-[#7D6360] hover:bg-white'
                   } disabled:cursor-not-allowed disabled:opacity-55`}
                 >
                   {filterOption.label}
