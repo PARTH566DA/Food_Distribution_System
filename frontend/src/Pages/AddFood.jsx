@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../Layout/MainLayout";
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Counter from '../component/Counter';
@@ -30,6 +30,17 @@ const MapClickHandler = ({ onLocationSelect }) => {
   return null;
 };
 
+const MapCenterOnLocation = ({ center, trigger }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!center) return;
+    map.flyTo(center, Math.max(map.getZoom(), 15), { duration: 0.8 });
+  }, [map, center, trigger]);
+
+  return null;
+};
+
 const AddFood = () => {
   const navigate = useNavigate();
 
@@ -53,6 +64,7 @@ const AddFood = () => {
   const [isEditingExpiry, setIsEditingExpiry] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [centerToLocationTrigger, setCenterToLocationTrigger] = useState(0);
 
   const defaultCenter = [23.0225, 72.5714];
   const defaultZoom = 13;
@@ -143,6 +155,7 @@ const AddFood = () => {
           latitude: position.coords.latitude.toFixed(6),
           longitude: position.coords.longitude.toFixed(6)
         }));
+        setCenterToLocationTrigger(prev => prev + 1);
         setGpsLoading(false);
         setShowMap(true);
       },
@@ -486,6 +499,10 @@ const AddFood = () => {
                   zoom={defaultZoom}
                   style={{ height: '100%', width: '100%' }}
                 >
+                  <MapCenterOnLocation
+                    center={formData.latitude && formData.longitude ? [parseFloat(formData.latitude), parseFloat(formData.longitude)] : null}
+                    trigger={centerToLocationTrigger}
+                  />
                   <TileLayer
                     url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                     attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'

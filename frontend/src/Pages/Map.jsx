@@ -109,6 +109,17 @@ const MapFitBounds = ({ zones }) => {
     return null;
 };
 
+const MapCenterOnUser = ({ userPos, trigger }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!userPos) return;
+        map.flyTo(userPos, Math.max(map.getZoom(), 15), { duration: 0.8 });
+    }, [map, userPos, trigger]);
+
+    return null;
+};
+
 const haversineMetres = (lat1, lon1, lat2, lon2) => {
     // Great-circle distance in meters for quick client-side proximity checks.
     const R = 6_371_000;
@@ -160,6 +171,7 @@ const Map = () => {
     const [reportReason, setReportReason]   = useState('');
     const [reportState, setReportState]     = useState('idle');
     const [reportCount, setReportCount]     = useState(null);
+    const [centerToUserTrigger, setCenterToUserTrigger] = useState(0);
 
     const authenticated = isAuthenticated();
 
@@ -213,6 +225,29 @@ const Map = () => {
         setNewMarkerPos(userPos);
         setShowForm(true);
         setFormError('');
+    };
+
+    const handleCenterToCurrentLocation = () => {
+        if (userPos) {
+            setCenterToUserTrigger((prev) => prev + 1);
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported in this browser.');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const nextPos = [pos.coords.latitude, pos.coords.longitude];
+                setUserPos(nextPos);
+                setCenterToUserTrigger((prev) => prev + 1);
+            },
+            () => {
+                alert('Unable to fetch your current location. Please enable location access.');
+            }
+        );
     };
 
     const handleCancelMarking = () => {
@@ -342,6 +377,7 @@ const Map = () => {
                         )}
 
                         {visibleZones.length > 0 && <MapFitBounds zones={visibleZones} />}
+                        <MapCenterOnUser userPos={userPos} trigger={centerToUserTrigger} />
 
                         <MapClickHandler
                             active={markingMode && !showForm}
@@ -397,6 +433,17 @@ const Map = () => {
                 </div>
 
                 <div className="absolute bottom-5 right-4 z-10 flex flex-col items-end gap-2.5">
+                    <MotionButton
+                        whileTap={{ scale: 0.94 }}
+                        onClick={handleCenterToCurrentLocation}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-[#2D7BD8] border border-[#D9E7FF] rounded-full text-xs font-bold shadow-md hover:bg-[#EEF5FF] transition-colors"
+                    >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+                        </svg>
+                        My Location
+                    </MotionButton>
+
                     <AnimatePresence>
                         {markingMode && !showForm && userPos && (
                             <MotionButton
