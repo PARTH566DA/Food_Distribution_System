@@ -292,7 +292,7 @@ const Map = () => {
 
     return (
         <MainLayout activeHref="/map">
-            <div className="relative mt-[24px] mb-[12px] h-[calc(100%-24px)] w-[60%] left-1/2 -translate-x-1/2 overflow-hidden rounded-[25px]">
+            <div className="relative mt-3 mb-2 h-[calc(100%-12px)] w-full left-1/2 -translate-x-1/2 overflow-hidden rounded-[20px] md:mt-[24px] md:mb-[12px] md:h-[calc(100%-24px)] md:w-[60%] md:rounded-[25px]">
 
                 {loading && (
                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#FFF7F6]">

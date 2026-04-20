@@ -554,7 +554,7 @@ const History = () => {
 
     return (
         <MainLayout activeHref="/history">
-            <div className="mx-auto mt-[24px] mb-[12px] h-[calc(100%-24px)] w-[60%] overflow-auto rounded-[25px] bg-[#FFF8F7] border border-[#F4DDD8] p-5">
+            <div className="mx-auto mt-3 mb-2 h-[calc(100%-12px)] w-full overflow-auto rounded-[20px] bg-[#FFF8F7] border border-[#F4DDD8] p-3 md:mt-[24px] md:mb-[12px] md:h-[calc(100%-24px)] md:w-[60%] md:rounded-[25px] md:p-5">
                 <GlassSurface
                     width="100%"
                     height="auto"
@@ -563,12 +563,12 @@ const History = () => {
                     blur={1}
                     saturation={1.4}
 
-                    className="mb-5 w-full sticky bg-[#FDE6E2]/80 top-0 z-20"
+                    className="mb-4 md:mb-5 w-full sticky bg-[#FDE6E2]/80 top-0 z-20"
                 >
                     <div className="inline-flex rounded-full w-full">
                         <button
                             onClick={() => setActiveTab(TABS.POSTED)}
-                            className={`rounded-full w-1/2 px-4 py-2 text-sm font-semibold transition-colors ${
+                                className={`rounded-full w-1/2 px-3 py-2 text-xs md:px-4 md:text-sm font-semibold transition-colors ${
                                 activeTab === TABS.POSTED ? "bg-[#FF8B77] text-white" : "text-[#7A5F5A]"
                             }`}
                         >
@@ -576,7 +576,7 @@ const History = () => {
                         </button>
                         <button
                             onClick={() => setActiveTab(TABS.ACCEPTED)}
-                            className={`rounded-full w-1/2 px-4 py-2 text-sm font-semibold transition-colors ${
+                                className={`rounded-full w-1/2 px-3 py-2 text-xs md:px-4 md:text-sm font-semibold transition-colors ${
                                 activeTab === TABS.ACCEPTED ? "bg-[#FF8B77] text-white" : "text-[#7A5F5A]"
                             }`}
                         >
@@ -625,7 +625,7 @@ const History = () => {
                 )}
 
                 {autoConfirmRequest && (
-                    <div className="fixed bottom-6 right-6 z-40 w-[330px] rounded-2xl border border-[#F2D0CA] bg-white shadow-xl p-4">
+                    <div className="fixed bottom-4 right-1/2 translate-x-1/2 md:translate-x-0 md:right-6 z-40 w-[92%] md:w-[330px] rounded-2xl border border-[#F2D0CA] bg-white shadow-xl p-4">
                         <p className="text-sm font-semibold text-[#5F4B47]">GPS Update Confirmation</p>
                         <p className="mt-1 text-xs text-[#846C67]">
                             You moved away from the location for {autoConfirmRequest.item.foodId || `#${autoConfirmRequest.item.id}`}. Confirm auto mark as {autoConfirmRequest.action === "PICKED_UP" ? "Picked Up" : "Delivered"}?
@@ -659,7 +659,7 @@ const History = () => {
                 )}
 
                 {toast && (
-                    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 rounded-full px-4 py-2 text-xs font-semibold shadow-lg ${
+                    <div className={`fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-40 rounded-full px-4 py-2 text-xs font-semibold shadow-lg ${
                         toast.type === "error" ? "bg-[#B94A48] text-white" : "bg-[#4C9A74] text-white"
                     }`}>
                         {toast.message}

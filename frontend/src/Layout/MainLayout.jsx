@@ -111,12 +111,12 @@ const MainLayout = ({
                 <Gradient {...defaultGradientProps} {...gradientProps} />
             </div>
 
-            <div className="relative z-10 flex h-full w-full flex-col p-4">
+            <div className="relative z-10 flex h-full w-full flex-col p-2 md:p-4">
 
                 <header className="">
-                    <div className="absolute top-[12px] left-[12px] right-[12px] h-[80px]">
+                    <div className="absolute top-[8px] left-[8px] right-[8px] h-[64px] md:top-[12px] md:left-[12px] md:right-[12px] md:h-[80px]">
                         <div 
-                            className="w-full h-full rounded-[25px] flex items-center justify-center px-5"
+                            className="w-full h-full rounded-[20px] md:rounded-[25px] flex items-center justify-center px-2 md:px-5"
                             style={{ backgroundColor: '#FFECEA' }}
                         >
                         <div className="relative z-20 flex items-center justify-center">
@@ -132,7 +132,7 @@ const MainLayout = ({
                     </div>
                 </header>
 
-                <main className={`mt-[64px] flex-1 overflow-auto rounded-3xl transition-opacity duration-300 ${isNotificationOpen || isProfileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <main className={`mt-[56px] md:mt-[64px] flex-1 overflow-auto rounded-2xl md:rounded-3xl pb-16 md:pb-0 transition-opacity duration-300 ${isNotificationOpen || isProfileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     {children}
                 </main>
 
@@ -143,8 +143,8 @@ const MainLayout = ({
                             fixed z-40 bg-[#FFECEA] rounded-[25px] shadow-lg
                             transition-all duration-500 ease-in-out
                             ${isNotificationOpen 
-                                ? 'left-1/2 top-[105px] bottom-[12px] w-[92%] -translate-x-1/2 md:w-[60%]' 
-                                : 'bottom-[90px] left-5 w-12 h-12'
+                                ? 'left-1/2 top-[80px] bottom-[8px] w-[96%] -translate-x-1/2 md:top-[105px] md:bottom-[12px] md:w-[60%]' 
+                                : 'bottom-[84px] left-3 w-11 h-11 md:bottom-[90px] md:left-5 md:w-12 md:h-12'
                             }
                         `}
                     >
@@ -173,7 +173,7 @@ const MainLayout = ({
                         {isNotificationOpen && (
                             <div className="w-full h-full p-6 flex flex-col">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-2xl font-bold text-[#6B5454]">Notifications</h2>
+                                    <h2 className="text-xl md:text-2xl font-bold text-[#6B5454]">Notifications</h2>
                                     <button
                                         onClick={toggleNotification}
                                         className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#FED0CB] transition-colors"
@@ -200,7 +200,7 @@ const MainLayout = ({
                 {currentUser && isProfileOpen && (
                     <div
                         ref={profilePanelRef}
-                        className="fixed z-40 bg-[#FFECEA] rounded-[25px] shadow-lg left-1/2 top-[105px] bottom-[12px] w-[92%] -translate-x-1/2 md:w-[60%]"
+                        className="fixed z-40 bg-[#FFECEA] rounded-[20px] md:rounded-[25px] shadow-lg left-1/2 top-[80px] bottom-[8px] w-[96%] -translate-x-1/2 md:top-[105px] md:bottom-[12px] md:w-[60%]"
                     >
                         <Profile
                             user={currentUser}
@@ -215,7 +215,7 @@ const MainLayout = ({
                     <button
                         type="button"
                         onClick={toggleProfile}
-                        className="absolute bottom-5 left-5 z-30 flex items-center gap-2 bg-[#FFECEA] rounded-2xl px-4 py-3 shadow-md hover:bg-[#FED0CB] transition-colors"
+                        className="absolute bottom-3 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-5 md:bottom-5 z-30 flex items-center gap-2 bg-[#FFECEA] rounded-2xl px-3 py-2.5 md:px-4 md:py-3 shadow-md hover:bg-[#FED0CB] transition-colors max-w-[95%]"
                     >
                         <div className="w-8 h-8 rounded-full bg-[#FED0CB] flex items-center justify-center shrink-0">
                             <span className="text-sm font-bold text-[#FF8B77]">
@@ -234,12 +234,24 @@ const MainLayout = ({
 
                         <div className="w-px h-6 bg-[#D9C7C3] mx-1" />
 
-                        <button
-                            onClick={handleLogout}
+                        <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleLogout();
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleLogout();
+                                }
+                            }}
                             className="text-xs font-semibold text-[#9B7B75] hover:text-[#FF8B77] transition-colors"
                         >
                             Logout
-                        </button>
+                        </span>
 
                     </button>
                 )}

@@ -77,12 +77,12 @@ const PillNav = ({
   const isRouterLink = (href) => href && !href.startsWith('http') && !href.startsWith('#');
 
   return (
-    <nav className={`flex items-center justify-center ${className}`}>
-      <ul className="flex list-none gap-[32px] ">
+    <nav className={`w-full overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}>
+      <ul className="mx-auto flex w-max min-w-full list-none justify-start gap-2 px-2 md:justify-center md:gap-[32px]">
         {items.map((item, i) => {
           const currentPath = location?.pathname || "";
           const isActive = activeHref ? activeHref === item.href : currentPath === item.href;
-          const commonClasses = "relative overflow-hidden inline-flex items-center justify-center pt-[16px] pb-[16px] pl-[12px] pr-[12px] rounded-full font-medium text-sm uppercase tracking-wider no-underline transition-all";
+          const commonClasses = "relative overflow-hidden inline-flex items-center justify-center px-3 py-2.5 md:pt-[16px] md:pb-[16px] md:pl-[12px] md:pr-[12px] rounded-full font-medium text-[11px] md:text-sm uppercase tracking-wide md:tracking-wider no-underline whitespace-nowrap transition-all";
           const labelColor = isActive ? hoveredPillTextColor : pillTextColor;
 
           const content = (

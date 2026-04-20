@@ -281,11 +281,11 @@ const FeedItem = ({
     };
 
     return (
-        <div className="w-full mb-4 mx-auto">
+        <div className="w-full mb-3 md:mb-4 mx-auto">
             <MotionDiv
                 layout
                 transition={{ layout: { type: 'spring', damping: 30, stiffness: 300 } }}
-                className="relative w-full overflow-hidden rounded-[25px] p-[10px] bg-[#FFECEA]"
+                className="relative w-full overflow-hidden rounded-[20px] p-3 md:rounded-[25px] md:p-[10px] bg-[#FFECEA]"
             >
                 {distanceLabel && (
                     <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 shadow-sm backdrop-blur-sm">
@@ -294,8 +294,8 @@ const FeedItem = ({
                     </div>
                 )}
 
-                <div className="flex gap-[10px]">
-                    <div className="w-[35%] flex-shrink-0 relative">
+                <div className="flex flex-col gap-3 md:flex-row md:gap-[10px]">
+                    <div className="w-full md:w-[35%] flex-shrink-0 relative">
                         <div className="relative w-full aspect-square">
                             <img
                                 src={resolveMediaUrl(item.imageUrl) || "/placeholder-food.jpg"}
@@ -318,12 +318,12 @@ const FeedItem = ({
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between">
-                        <div className="w-[60%]">
-                            <h3 className="text-2xl font-semibold text-black">
+                        <div className="w-full md:w-[60%]">
+                            <h3 className="text-xl md:text-2xl font-semibold text-black">
                                 {item.description}
                             </h3>
 
-                            <p className="text-base text-[#797979] mb-4">
+                            <p className="text-sm md:text-base text-[#797979] mb-3 md:mb-4">
                                 {item.address || item.location}
                             </p>
                         </div>
@@ -331,14 +331,14 @@ const FeedItem = ({
 
                             <div className="w-full h-[2px] bg-[#D9D9D9] mb-4"></div>
 
-                            <div className="flex justify-between">
+                            <div className="flex flex-col gap-4 md:flex-row md:justify-between">
                                 <div className="flex flex-col gap-6 flex-1">
-                                    <div className="flex items-center gap-2 text-base">
+                                    <div className="flex items-center gap-2 text-sm md:text-base">
                                         <img src={QuantityIcon} alt="Quantity" className="w-5 h-5" />
                                         <span className="font-semibold text-black">Serve:</span>
                                         <span className="text-gray-700">{item.quantity}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-base">
+                                    <div className="flex items-center gap-2 text-sm md:text-base">
                                         <img src={ClockIcon} alt="Expiry" className="w-5 h-5" />
                                         <span className="font-semibold text-black">Fresh:</span>
                                         <span className="text-gray-700">
@@ -365,7 +365,7 @@ const FeedItem = ({
                                             })()} hrs.
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-base">
+                                    <div className="flex items-center gap-2 text-sm md:text-base">
                                         <img src={PackageIcon} alt="Package" className="w-5 h-5" />
                                         <span className="font-semibold text-black">
                                             {item.packed ? 'Pre-Packed' : 'Not Packed'}
@@ -373,7 +373,7 @@ const FeedItem = ({
                                     </div>
                                 </div>
                                 
-                                <div className="flex flex-col justify-end mr-[10px]">
+                                <div className="flex flex-col justify-end md:mr-[10px]">
                                     {item.status === 'available' && isOwner && (
                                         <button
                                             onClick={() => onCancel?.(item.id || item.foodId)}

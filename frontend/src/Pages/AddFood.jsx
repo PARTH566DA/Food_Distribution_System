@@ -189,7 +189,7 @@ const AddFood = () => {
     setSubmitLoading(true);
     try {
       await addFood(formData);
-      navigate('/');
+      navigate('/home', { replace: true });
     } catch (error) {
       console.error('Error submitting form:', error);
       setSubmitError(error.message || 'Failed to submit food listing. Please try again.');
@@ -201,7 +201,7 @@ const AddFood = () => {
   const getButtonStyles = () => {
     return {
       base: "relative overflow-hidden rounded-full bg-[#FF8B77] text-white font-semibold text-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg active:scale-95",
-      dimensions: "w-[180px] h-[50px]",
+      dimensions: "w-full md:w-[180px] h-[46px] md:h-[50px]",
       hover: "hover:bg-[#FF7A66]",
       animation: "before:content-[''] before:absolute before:top-0 before:left-[-100%] before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-700 hover:before:left-[100%]"
     };
@@ -222,13 +222,13 @@ const AddFood = () => {
 
   return (
     <MainLayout activeHref="/addfood">
-      <div className="flex h-full w-full items-start justify-center py-6">
-        <div className="w-[60%]">
+      <div className="flex h-full w-full items-start justify-center px-2 py-3 md:py-6">
+        <div className="w-full md:w-[60%]">
 
           <form onSubmit={handleSubmit}>
-            <div className="w-full overflow-hidden rounded-[25px] p-[10px] bg-[#FFECEA]">
-              <div className="flex gap-[10px]">
-                <div className="w-[35%] flex-shrink-0 relative">
+            <div className="w-full overflow-hidden rounded-[20px] p-3 md:rounded-[25px] md:p-[10px] bg-[#FFECEA]">
+              <div className="flex flex-col gap-3 md:flex-row md:gap-[10px]">
+                <div className="w-full md:w-[35%] flex-shrink-0 relative">
                   <div className="relative w-full aspect-square">
                     <label
                       htmlFor="image-upload"
@@ -278,7 +278,7 @@ const AddFood = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 flex flex-col mt-[10px] justify-between">
+                <div className="flex-1 flex flex-col mt-0 md:mt-[10px] justify-between">
                   <div className="w-full">
                     <input
                       type="text"
@@ -286,7 +286,7 @@ const AddFood = () => {
                       value={formData.description}
                       onChange={handleInputChange}
                       placeholder="Food Description"
-                      className="text-2xl font-semibold text-black bg-transparent border-none outline-none placeholder:text-gray-400 w-full mb-2"
+                      className="text-xl md:text-2xl font-semibold text-black bg-transparent border-none outline-none placeholder:text-gray-400 w-full mb-2"
                       required
                     />
 
@@ -304,9 +304,9 @@ const AddFood = () => {
                   <div>
                     <div className="w-full h-[2px] bg-[#D9D9D9] mb-4"></div>
 
-                    <div className="flex justify-between">
+                    <div className="flex flex-col gap-4 md:flex-row md:justify-between">
                       <div className="flex flex-col gap-3 flex-1">
-                        <div className="flex items-center gap-2 text-base">
+                        <div className="flex flex-wrap items-center gap-2 text-sm md:text-base">
                           <img src={QuantityIcon} alt="Quantity" className="w-5 h-5" />
                           <span className="font-semibold text-black">Serve:</span>
                           <div className="flex items-center gap-2 bg-white/50 border border-gray-300 rounded-lg px-2 py-1">
@@ -364,7 +364,7 @@ const AddFood = () => {
                           </div>
                           <span className="text-gray-700">people</span>
                         </div>
-                        <div className="flex items-center gap-2 text-base">
+                        <div className="flex flex-wrap items-center gap-2 text-sm md:text-base">
                           <img src={ClockIcon} alt="Expiry" className="w-5 h-5" />
                           <span className="font-semibold text-black">Fresh:</span>
                           <div className="flex items-center gap-2 bg-white/50 border border-gray-300 rounded-lg px-2 py-1">
@@ -423,7 +423,7 @@ const AddFood = () => {
                           <span className="text-gray-700">hrs.</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-base">
+                        <div className="flex flex-wrap items-center gap-2 text-sm md:text-base">
                           <img src={PackageIcon} alt="Package" className="w-5 h-5" />
                           <span className="font-semibold text-black">Status:</span>
                           <div className="flex items-center gap-2 bg-white/50 border border-gray-300 rounded-lg px-2 py-1">
@@ -449,7 +449,7 @@ const AddFood = () => {
                         </div>
                       </div>
 
-                      <div className="flex flex-col justify-end mr-[10px]">
+                      <div className="flex flex-col justify-end md:mr-[10px]">
                         {renderSubmitButton()}
                       </div>
                     </div>
@@ -465,7 +465,7 @@ const AddFood = () => {
             )}
 
             {!showMap && (
-              <div className="w-full mt-6 flex justify-center">
+              <div className="w-full mt-5 md:mt-6 flex justify-center">
                 <button
                   type="button"
                   onClick={() => setShowMap(true)}
@@ -480,7 +480,7 @@ const AddFood = () => {
             )}
 
             {showMap && (
-              <div className="w-full mt-6 rounded-[25px] overflow-hidden relative" style={{ height: '400px' }}>
+              <div className="w-full mt-5 md:mt-6 rounded-[20px] md:rounded-[25px] overflow-hidden relative h-[280px] md:h-[400px]">
                 <MapContainer
                   center={formData.latitude && formData.longitude ? [parseFloat(formData.latitude), parseFloat(formData.longitude)] : defaultCenter}
                   zoom={defaultZoom}
@@ -498,9 +498,9 @@ const AddFood = () => {
                   )}
                 </MapContainer>
                 
-                <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-[#FFECEA] backdrop-blur-sm rounded-xl shadow-lg p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
+                <div className="absolute bottom-3 left-3 right-3 z-[1000] bg-[#FFECEA] backdrop-blur-sm rounded-xl shadow-lg p-3 md:bottom-4 md:left-4 md:right-4 md:p-4">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
+                    <div className="flex items-center gap-2 min-w-0">
                       <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -511,7 +511,7 @@ const AddFood = () => {
                       ) : gpsError ? (
                         <span className="text-red-500 text-sm">{gpsError}</span>
                       ) : formData.latitude && formData.longitude ? (
-                        <span className="text-gray-700 text-sm font-mono">
+                        <span className="text-gray-700 text-xs md:text-sm font-mono truncate">
                           {formData.latitude}, {formData.longitude}
                         </span>
                       ) : (
@@ -519,7 +519,7 @@ const AddFood = () => {
                       )}
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {gpsError ? (
                         <>
                           <button

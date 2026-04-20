@@ -95,9 +95,9 @@ const SignUp = () => {
                 <Gradient {...gradientProps} />
             </div>
 
-            <div className="relative z-10 flex h-screen w-full items-center justify-center">
-                <div className="absolute top-1/2 left-1/2 transform -translate-y-1/2 w-[43.75%] min-w-[320px] bg-[#FFF5F2] rounded-[25px] px-10 py-12 flex flex-col gap-6 shadow-sm">
-                    <h1 className="text-3xl font-bold text-gray-900">
+            <div className="relative z-10 flex min-h-screen w-full items-center justify-center p-4 md:h-screen">
+                <div className="w-full max-w-[680px] md:w-[43.75%] md:min-w-[320px] bg-[#FFF5F2] rounded-[22px] md:rounded-[25px] px-6 py-7 md:px-10 md:py-12 flex flex-col gap-5 md:gap-6 shadow-sm">
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                         {step === 1 ? "Sign Up" : "Verify Email"}
                     </h1>
 
