@@ -144,9 +144,10 @@ const MainLayout = ({
                             transition-all duration-500 ease-in-out
                             ${isNotificationOpen 
                                 ? 'left-1/2 top-[80px] bottom-[8px] w-[96%] -translate-x-1/2 md:top-[105px] md:bottom-[12px] md:w-[60%]' 
-                                : 'bottom-3 right-3 w-11 h-11 md:bottom-[90px] md:left-5 md:right-auto md:w-12 md:h-12'
+                                : 'fixed right-3 w-11 h-11 md:bottom-[90px] md:left-5 md:right-auto md:w-12 md:h-12'
                             }
                         `}
+                        style={!isNotificationOpen ? { bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' } : undefined}
                     >
                         {!isNotificationOpen && (
                             <button
@@ -215,7 +216,8 @@ const MainLayout = ({
                     <button
                         type="button"
                         onClick={toggleProfile}
-                        className="absolute bottom-3 left-3 md:left-5 md:bottom-5 z-30 flex items-center gap-2 bg-[#FFECEA] rounded-2xl px-3 py-2.5 md:px-4 md:py-3 shadow-md hover:bg-[#FED0CB] transition-colors"
+                        className="fixed left-3 z-30 flex items-center gap-2 bg-[#FFECEA] rounded-2xl px-3 py-2.5 md:px-4 md:py-3 shadow-md hover:bg-[#FED0CB] transition-colors md:left-5 md:bottom-5"
+                        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
                     >
                         <div className="w-8 h-8 rounded-full bg-[#FED0CB] flex items-center justify-center shrink-0">
                             <span className="text-sm font-bold text-[#FF8B77]">
