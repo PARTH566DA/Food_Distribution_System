@@ -59,7 +59,6 @@ const AddFood = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsError, setGpsError] = useState(null);
-  const [showMap, setShowMap] = useState(false);
   const [isEditingQuantity, setIsEditingQuantity] = useState(false);
   const [isEditingExpiry, setIsEditingExpiry] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -476,23 +475,7 @@ const AddFood = () => {
               </div>
             )}
 
-            {!showMap && (
-              <div className="w-full mt-5 md:mt-6 flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => setShowMap(true)}
-                  className="px-6 py-3 bg-[#FF8B77] text-white font-semibold rounded-full hover:bg-[#FF7A66] transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                  Show Map
-                </button>
-              </div>
-            )}
-
-            {showMap && (
-              <div className="w-full mt-5 md:mt-6 rounded-[20px] md:rounded-[25px] overflow-hidden relative h-[280px] md:h-[400px]">
+            <div className="w-full mt-5 md:mt-6 rounded-[20px] md:rounded-[25px] overflow-hidden relative h-[280px] md:h-[400px]">
                 <MapContainer
                   center={formData.latitude && formData.longitude ? [parseFloat(formData.latitude), parseFloat(formData.longitude)] : defaultCenter}
                   zoom={defaultZoom}
@@ -562,13 +545,6 @@ const AddFood = () => {
                           Detect Location
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => setShowMap(false)}
-                        className="px-3 py-1.5 bg-white text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors"
-                      >
-                        Hide Map
-                      </button>
                     </div>
                   </div>
                   <p className="text-xs text-gray-600 mt-2">
@@ -576,7 +552,6 @@ const AddFood = () => {
                   </p>
                 </div>
               </div>
-            )}
           </form>
         </div>
       </div>
