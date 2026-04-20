@@ -157,7 +157,6 @@ const AddFood = () => {
         }));
         setCenterToLocationTrigger(prev => prev + 1);
         setGpsLoading(false);
-        setShowMap(true);
       },
       (error) => {
         setGpsLoading(false);
