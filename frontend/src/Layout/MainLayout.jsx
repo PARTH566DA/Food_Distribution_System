@@ -144,10 +144,9 @@ const MainLayout = ({
                             transition-all duration-500 ease-in-out
                             ${isNotificationOpen 
                                 ? 'left-1/2 top-[80px] bottom-[8px] w-[96%] -translate-x-1/2 md:top-[105px] md:bottom-[12px] md:w-[60%]' 
-                                : 'fixed right-3 w-11 h-11 md:bottom-[90px] md:left-5 md:right-auto md:w-12 md:h-12'
+                                : 'fixed right-3 bottom-[calc(env(safe-area-inset-bottom,0px)+12px)] w-11 h-11 md:bottom-[90px] md:left-5 md:right-auto md:w-12 md:h-12'
                             }
                         `}
-                        style={!isNotificationOpen ? { bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' } : undefined}
                     >
                         {!isNotificationOpen && (
                             <button
