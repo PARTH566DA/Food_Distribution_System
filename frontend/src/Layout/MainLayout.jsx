@@ -113,7 +113,7 @@ const MainLayout = ({
 
             <div className="relative z-10 flex h-full w-full flex-col p-2 md:p-4">
 
-                <header className="">
+                <header className="relative z-50">
                     <div className="absolute top-[8px] left-[8px] right-[8px] h-[64px] md:top-[12px] md:left-[12px] md:right-[12px] md:h-[80px]">
                         <div 
                             className="w-full h-full rounded-[20px] md:rounded-[25px] flex items-center justify-center px-2 md:px-5"
@@ -132,7 +132,7 @@ const MainLayout = ({
                     </div>
                 </header>
 
-                <main className={`mt-[56px] md:mt-[64px] flex-1 overflow-auto rounded-2xl md:rounded-3xl pb-16 md:pb-0 transition-opacity duration-300 ${isNotificationOpen || isProfileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <main className={`relative z-10 mt-[72px] md:mt-[92px] flex-1 overflow-auto rounded-2xl md:rounded-3xl pb-16 md:pb-0 transition-opacity duration-300 ${isNotificationOpen || isProfileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     {children}
                 </main>
 
