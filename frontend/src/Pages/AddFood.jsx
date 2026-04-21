@@ -191,6 +191,136 @@ const AddFood = () => {
     }));
   };
 
+  const normalizeText = (value) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const distanceInKm = (lat1, lon1, lat2, lon2) => {
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const earthRadiusKm = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return earthRadiusKm * c;
+  };
+
+  const pickBestGeocodeMatch = (query, candidates) => {
+    const normalizedQuery = normalizeText(query);
+    const queryTokens = normalizedQuery.split(' ').filter(token => token.length > 1);
+    const currentLat = parseFloat(formData.latitude);
+    const currentLng = parseFloat(formData.longitude);
+    const hasCurrentCoords = !Number.isNaN(currentLat) && !Number.isNaN(currentLng);
+
+    let bestCandidate = null;
+    let bestScore = -Infinity;
+
+    candidates.forEach((candidate) => {
+      const text = normalizeText(candidate.label || '');
+      if (!text) return;
+
+      let score = 0;
+      if (text.includes(normalizedQuery)) score += 60;
+
+      queryTokens.forEach((token) => {
+        if (text.includes(token)) score += 8;
+      });
+
+      if (hasCurrentCoords) {
+        const km = distanceInKm(currentLat, currentLng, candidate.lat, candidate.lng);
+        score += Math.max(0, 30 - km / 2);
+      }
+
+      if (candidate.source === 'nominatim') score += 5;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestCandidate = candidate;
+      }
+    });
+
+    return bestCandidate;
+  };
+
+  const fetchNominatimCandidates = async (locationQuery) => {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(locationQuery)}`,
+      {
+        headers: {
+          'Accept-Language': 'en'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(response.status === 429 ? 'Address search is busy. Please try again in a few seconds.' : 'Unable to find this address right now.');
+    }
+
+    const results = await response.json();
+    return results
+      .map((item) => ({
+        lat: parseFloat(item.lat),
+        lng: parseFloat(item.lon),
+        label: item.display_name || '',
+        source: 'nominatim'
+      }))
+      .filter((item) => !Number.isNaN(item.lat) && !Number.isNaN(item.lng));
+  };
+
+  const fetchPhotonCandidates = async (locationQuery) => {
+    const response = await fetch(
+      `https://photon.komoot.io/api/?limit=5&q=${encodeURIComponent(locationQuery)}`
+    );
+
+    if (!response.ok) {
+      throw new Error('Fallback search failed.');
+    }
+
+    const payload = await response.json();
+    return (payload.features || [])
+      .map((feature) => ({
+        lat: parseFloat(feature?.geometry?.coordinates?.[1]),
+        lng: parseFloat(feature?.geometry?.coordinates?.[0]),
+        label: feature?.properties?.name || feature?.properties?.street || feature?.properties?.city || '',
+        source: 'photon'
+      }))
+      .filter((item) => !Number.isNaN(item.lat) && !Number.isNaN(item.lng));
+  };
+
+  const geocodeAddress = async (locationQuery) => {
+    let candidates = [];
+
+    try {
+      candidates = await fetchNominatimCandidates(locationQuery);
+    } catch (error) {
+      if (error.message?.includes('busy')) {
+        throw error;
+      }
+    }
+
+    if (candidates.length === 0) {
+      try {
+        candidates = await fetchPhotonCandidates(locationQuery);
+      } catch (error) {
+        if (candidates.length === 0) {
+          throw new Error('Could not resolve this address. Add city/landmark and try again.');
+        }
+      }
+    }
+
+    const bestCandidate = pickBestGeocodeMatch(locationQuery, candidates);
+    if (!bestCandidate) {
+      throw new Error('Address not found. Try adding more detail.');
+    }
+
+    return bestCandidate;
+  };
+
   useEffect(() => {
     getGPSLocation();
   }, []);
@@ -198,7 +328,7 @@ const AddFood = () => {
   useEffect(() => {
     const locationQuery = formData.location.trim();
 
-    if (locationQuery.length < 4) {
+    if (locationQuery.length < 3) {
       setGeocodeLoading(false);
       setGeocodeError(null);
       return;
@@ -212,34 +342,16 @@ const AddFood = () => {
       setGeocodeError(null);
 
       try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(locationQuery)}`
-        );
-
-        if (!response.ok) {
-          throw new Error('Unable to find this address right now.');
-        }
-
-        const results = await response.json();
-
+        const bestMatch = await geocodeAddress(locationQuery);
         if (geocodeRequestIdRef.current !== requestId) return;
 
-        if (results.length > 0) {
-          const lat = parseFloat(results[0].lat);
-          const lng = parseFloat(results[0].lon);
-
-          if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-            setFormData(prev => ({
-              ...prev,
-              latitude: lat.toFixed(6),
-              longitude: lng.toFixed(6)
-            }));
-            setCenterToLocationTrigger(prev => prev + 1);
-            setGeocodeError(null);
-          }
-        } else {
-          setGeocodeError('Address not found. Try adding more detail.');
-        }
+        setFormData(prev => ({
+          ...prev,
+          latitude: bestMatch.lat.toFixed(6),
+          longitude: bestMatch.lng.toFixed(6)
+        }));
+        setCenterToLocationTrigger(prev => prev + 1);
+        setGeocodeError(null);
       } catch (error) {
         if (geocodeRequestIdRef.current !== requestId) return;
         setGeocodeError(error.message || 'Could not detect coordinates from this address.');
@@ -248,7 +360,7 @@ const AddFood = () => {
           setGeocodeLoading(false);
         }
       }
-    }, 700);
+    }, 900);
 
     return () => {
       clearTimeout(timer);
