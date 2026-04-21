@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../Layout/MainLayout";
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
@@ -64,6 +64,10 @@ const AddFood = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [centerToLocationTrigger, setCenterToLocationTrigger] = useState(0);
+  const [geocodeLoading, setGeocodeLoading] = useState(false);
+  const [geocodeError, setGeocodeError] = useState(null);
+
+  const geocodeRequestIdRef = useRef(0);
 
   const defaultCenter = [23.0225, 72.5714];
   const defaultZoom = 13;
@@ -177,6 +181,9 @@ const AddFood = () => {
   };
 
   const handleMapLocationSelect = (lat, lng) => {
+    geocodeRequestIdRef.current += 1;
+    setGeocodeLoading(false);
+    setGeocodeError(null);
     setFormData(prev => ({
       ...prev,
       latitude: lat.toFixed(6),
@@ -187,6 +194,66 @@ const AddFood = () => {
   useEffect(() => {
     getGPSLocation();
   }, []);
+
+  useEffect(() => {
+    const locationQuery = formData.location.trim();
+
+    if (locationQuery.length < 4) {
+      setGeocodeLoading(false);
+      setGeocodeError(null);
+      return;
+    }
+
+    const requestId = geocodeRequestIdRef.current + 1;
+    geocodeRequestIdRef.current = requestId;
+
+    const timer = setTimeout(async () => {
+      setGeocodeLoading(true);
+      setGeocodeError(null);
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(locationQuery)}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Unable to find this address right now.');
+        }
+
+        const results = await response.json();
+
+        if (geocodeRequestIdRef.current !== requestId) return;
+
+        if (results.length > 0) {
+          const lat = parseFloat(results[0].lat);
+          const lng = parseFloat(results[0].lon);
+
+          if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+            setFormData(prev => ({
+              ...prev,
+              latitude: lat.toFixed(6),
+              longitude: lng.toFixed(6)
+            }));
+            setCenterToLocationTrigger(prev => prev + 1);
+            setGeocodeError(null);
+          }
+        } else {
+          setGeocodeError('Address not found. Try adding more detail.');
+        }
+      } catch (error) {
+        if (geocodeRequestIdRef.current !== requestId) return;
+        setGeocodeError(error.message || 'Could not detect coordinates from this address.');
+      } finally {
+        if (geocodeRequestIdRef.current === requestId) {
+          setGeocodeLoading(false);
+        }
+      }
+    }, 700);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [formData.location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -550,6 +617,12 @@ const AddFood = () => {
                   <p className="text-xs text-gray-600 mt-2">
                     Click anywhere on the map to set your pickup location
                   </p>
+                  {geocodeLoading && (
+                    <p className="text-xs text-gray-600 mt-1">Finding address on map...</p>
+                  )}
+                  {geocodeError && (
+                    <p className="text-xs text-red-600 mt-1">{geocodeError}</p>
+                  )}
                 </div>
               </div>
           </form>
