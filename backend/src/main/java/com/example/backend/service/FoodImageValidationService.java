@@ -13,6 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -26,7 +27,10 @@ public class FoodImageValidationService {
             "food", "dish", "meal", "cuisine", "snack", "dessert", "fruit", "vegetable",
             "pizza", "burger", "sandwich", "pasta", "noodle", "rice", "biryani", "salad",
             "soup", "bread", "cake", "chocolate", "ice cream", "chicken", "fish", "egg",
-            "curry", "dal", "roti", "naan", "idli", "dosa", "samosa", "thali"
+            "curry", "dal", "roti", "naan", "idli", "dosa", "samosa", "thali", "chapati",
+            "paneer", "sabzi", "poha", "upma", "paratha", "lunch", "dinner", "breakfast",
+            "plate", "platter", "bowl", "tray", "tiffin", "lunchbox", "container", "parcel",
+            "takeout", "packed", "packaged", "cooked", "restaurant", "street food"
     );
 
     private final ObjectMapper objectMapper;
@@ -38,8 +42,11 @@ public class FoodImageValidationService {
     @Value("${app.food-image-validation.fail-open:true}")
     private boolean failOpen;
 
-    @Value("${app.food-image-validation.threshold:0.18}")
+    @Value("${app.food-image-validation.threshold:0.10}")
     private double foodThreshold;
+
+    @Value("${app.food-image-validation.total-threshold:0.22}")
+    private double totalFoodThreshold;
 
     @Value("${app.food-image-validation.hf-url:https://api-inference.huggingface.co/models/microsoft/resnet-50}")
     private String huggingFaceUrl;
@@ -68,11 +75,18 @@ public class FoodImageValidationService {
         }
 
         try {
-            double topFoodScore = extractTopFoodScore(callClassifier(image), image.getOriginalFilename());
-            if (topFoodScore < foodThreshold) {
+            FoodScoreSummary summary = extractFoodScores(callClassifier(image), image.getOriginalFilename());
+            boolean accepted = summary.bestFoodScore >= foodThreshold || summary.totalFoodScore >= totalFoodThreshold;
+            if (!accepted) {
                 throw new IllegalArgumentException(FOOD_IMAGE_REJECTION_MESSAGE);
             }
-            log.info("Food image validation passed score={} threshold={}", round(topFoodScore), round(foodThreshold));
+            log.info(
+                    "Food image validation passed bestFoodScore={} totalFoodScore={} thresholds(single={}, total={})",
+                    round(summary.bestFoodScore),
+                    round(summary.totalFoodScore),
+                    round(foodThreshold),
+                    round(totalFoodThreshold)
+            );
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -90,6 +104,7 @@ public class FoodImageValidationService {
                 .uri(URI.create(huggingFaceUrl))
                 .timeout(Duration.ofSeconds(15))
                 .header("Content-Type", image.getContentType() != null ? image.getContentType() : "application/octet-stream")
+                .header("X-Wait-For-Model", "true")
                 .POST(HttpRequest.BodyPublishers.ofByteArray(image.getBytes()));
 
         if (huggingFaceApiToken != null && !huggingFaceApiToken.isBlank()) {
@@ -111,27 +126,50 @@ public class FoodImageValidationService {
         return payload;
     }
 
-    private double extractTopFoodScore(JsonNode predictions, String fileName) {
+    private FoodScoreSummary extractFoodScores(JsonNode predictions, String fileName) {
+        List<JsonNode> normalizedPredictions = normalizePredictionItems(predictions);
         double bestFoodScore = 0.0;
+        double totalFoodScore = 0.0;
 
-        for (JsonNode prediction : predictions) {
+        for (JsonNode prediction : normalizedPredictions) {
             String label = prediction.path("label").asText("");
             double score = prediction.path("score").asDouble(0.0);
 
             if (isFoodLabel(label)) {
                 bestFoodScore = Math.max(bestFoodScore, score);
+                totalFoodScore += score;
             }
         }
 
         if (bestFoodScore > 0.0) {
-            return bestFoodScore;
+            return new FoodScoreSummary(bestFoodScore, totalFoodScore);
         }
 
         if (looksLikeFoodFilename(fileName)) {
-            return 0.10;
+            return new FoodScoreSummary(0.10, 0.10);
         }
 
-        return 0.0;
+        return new FoodScoreSummary(0.0, 0.0);
+    }
+
+    private List<JsonNode> normalizePredictionItems(JsonNode predictions) {
+        List<JsonNode> items = new ArrayList<>();
+
+        for (JsonNode node : predictions) {
+            if (node.isObject() && node.has("label")) {
+                items.add(node);
+                continue;
+            }
+            if (node.isArray()) {
+                for (JsonNode nested : node) {
+                    if (nested.isObject() && nested.has("label")) {
+                        items.add(nested);
+                    }
+                }
+            }
+        }
+
+        return items;
     }
 
     private boolean isFoodLabel(String label) {
@@ -159,4 +197,6 @@ public class FoodImageValidationService {
     private double round(double value) {
         return Math.round(value * 1000.0) / 1000.0;
     }
+
+    private record FoodScoreSummary(double bestFoodScore, double totalFoodScore) {}
 }
