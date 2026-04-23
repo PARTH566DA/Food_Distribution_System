@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { saveSession, updateProfile } from "../api/auth";
 
+const MOBILE_REGEX = /^[6-9]\d{9}$/;
+const NAME_REGEX = /^[A-Za-z ]+$/;
+
 const Profile = ({ user, onClose, onLogout, onProfileSaved }) => {
 	if (!user) return null;
 
@@ -28,8 +31,13 @@ const Profile = ({ user, onClose, onLogout, onProfileSaved }) => {
 			return;
 		}
 
-		if (mobileDigits.length < 10 || mobileDigits.length > 15) {
-			setError("Mobile number should be between 10 and 15 digits.");
+		if (!NAME_REGEX.test(trimmedName)) {
+			setError("Name should contain only letters and spaces.");
+			return;
+		}
+
+		if (!MOBILE_REGEX.test(mobileDigits)) {
+			setError("Mobile number must be exactly 10 digits and start with 6, 7, 8, or 9.");
 			return;
 		}
 
@@ -118,6 +126,8 @@ const Profile = ({ user, onClose, onLogout, onProfileSaved }) => {
 						type="text"
 						value={name}
 						onChange={(e) => setName(e.target.value)}
+						pattern="[A-Za-z ]+"
+						title="Name should contain only letters and spaces"
 						disabled={!isEditing || isSaving}
 						className="w-full rounded-xl border border-[#E8D1CC] bg-[#FFFDFC] px-3 py-2 text-sm text-[#6B5454] outline-none focus:border-[#FF8B77] disabled:bg-[#F9F2F0]"
 					/>
@@ -126,7 +136,9 @@ const Profile = ({ user, onClose, onLogout, onProfileSaved }) => {
 					<input
 						type="tel"
 						value={mobile}
-						onChange={(e) => setMobile(e.target.value)}
+						onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+						pattern="[6-9][0-9]{9}"
+						title="Enter 10 digits starting with 6, 7, 8, or 9"
 						disabled={!isEditing || isSaving}
 						className="w-full rounded-xl border border-[#E8D1CC] bg-[#FFFDFC] px-3 py-2 text-sm text-[#6B5454] outline-none focus:border-[#FF8B77] disabled:bg-[#F9F2F0]"
 					/>

@@ -29,6 +29,8 @@ const gradientProps = {
 };
 
 const ROLES = ["CITIZEN", "NGO"];
+const MOBILE_REGEX = /^[6-9]\d{9}$/;
+const NAME_REGEX = /^[A-Za-z ]+$/;
 
 const SignUp = () => {
     const navigate = useNavigate();
@@ -51,8 +53,12 @@ const SignUp = () => {
             setError("Please fill in all fields.");
             return;
         }
-        if (!/^\d{10}$/.test(mobileNumber.trim())) {
-            setError("Enter a valid 10-digit mobile number.");
+        if (!NAME_REGEX.test(userName.trim())) {
+            setError("Name should contain only letters and spaces.");
+            return;
+        }
+        if (!MOBILE_REGEX.test(mobileNumber.trim())) {
+            setError("Enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.");
             return;
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailId.trim())) {
@@ -114,6 +120,8 @@ const SignUp = () => {
                                 placeholder="Full Name"
                                 value={userName}
                                 onChange={(e) => setUserName(e.target.value)}
+                                pattern="[A-Za-z ]+"
+                                title="Name should contain only letters and spaces"
                                 className="bg-transparent border-b border-[#D9C7C3] outline-none text-gray-700 placeholder-[#C0ABA6] py-2 text-base"
                             />
                             <input
@@ -122,6 +130,8 @@ const SignUp = () => {
                                 placeholder="Mobile Number"
                                 value={mobileNumber}
                                 onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                                pattern="[6-9][0-9]{9}"
+                                title="Enter 10 digits starting with 6, 7, 8, or 9"
                                 className="bg-transparent border-b border-[#D9C7C3] outline-none text-gray-700 placeholder-[#C0ABA6] py-2 text-base"
                             />
                             <input
