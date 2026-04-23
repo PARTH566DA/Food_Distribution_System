@@ -35,7 +35,7 @@ public class FoodImageValidationService {
     @Value("${app.food-image-validation.enabled:true}")
     private boolean foodValidationEnabled;
 
-    @Value("${app.food-image-validation.fail-open:false}")
+    @Value("${app.food-image-validation.fail-open:true}")
     private boolean failOpen;
 
     @Value("${app.food-image-validation.threshold:0.18}")
@@ -57,6 +57,14 @@ public class FoodImageValidationService {
     public void validateAsFoodOrThrow(MultipartFile image) {
         if (!foodValidationEnabled || image == null || image.isEmpty()) {
             return;
+        }
+
+        if (huggingFaceApiToken == null || huggingFaceApiToken.isBlank()) {
+            if (failOpen) {
+                log.warn("Food image validation token not configured; allowing upload due to fail-open setting");
+                return;
+            }
+            throw new IllegalArgumentException("Image validation token is missing. Please contact support.");
         }
 
         try {
