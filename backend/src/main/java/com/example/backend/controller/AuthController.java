@@ -4,6 +4,8 @@ import com.example.backend.dto.*;
 import com.example.backend.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,7 +49,17 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> loginVerify(@RequestBody VerifyOtpRequest request) {
         log.info("API login verify requested email={}", maskEmail(request.getEmailId()));
         AuthResponse user = authService.verifyLogin(request);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Login successful.", user));
+        String token = user.getToken();
+        ResponseCookie cookie = ResponseCookie.from("token", token)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("None")
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new ApiResponse<>(true, "Login successful.", user));
     }
 
     @PatchMapping("/profile")

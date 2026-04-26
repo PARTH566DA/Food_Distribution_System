@@ -26,6 +26,7 @@ const adminHeader = () => {
 
 const call = async (endpoint, options = {}) => {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        credentials: "include",
         headers: { 'Content-Type': 'application/json', ...adminHeader(), ...options.headers },
         ...options,
     });

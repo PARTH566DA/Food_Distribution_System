@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,12 +33,11 @@ public class FoodListingController {
 
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<FoodPageResponse>> getFoodFeed(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
+            @PageableDefault(page = 0, size = 5) org.springframework.data.domain.Pageable pageable
     ) {
         try {
-            log.info("API get food feed page={} size={}", page, size);
-            Page<FoodListing> foodPage = foodListingService.getAvailableFoodListings(page, size);
+            log.info("API get food feed page={} size={}", pageable.getPageNumber(), pageable.getPageSize());
+            Page<FoodListing> foodPage = foodListingService.getAvailableFoodListings(pageable.getPageNumber(), pageable.getPageSize());
 
             List<FoodListingDTO> items = foodPage.getContent()
                     .stream()
@@ -54,7 +54,7 @@ public class FoodListingController {
 
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception e) {
-            log.error("Failed to fetch food feed page={} size={}", page, size, e);
+            log.error("Failed to fetch food feed page={} size={}", pageable.getPageNumber(), pageable.getPageSize(), e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to fetch food listings: " + e.getMessage()));

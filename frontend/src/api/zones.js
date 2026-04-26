@@ -12,7 +12,8 @@ export class DuplicateZoneError extends Error {
 
 const apiClient = async (endpoint, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    headers: {
+    credentials: "include",
+        headers: {
       'Content-Type': 'application/json',
       ...authHeader(),
       ...options.headers,

@@ -1,0 +1,1 @@
+sed -i '' -e 's/import org.springframework.http.ResponseEntity;/import org.springframework.http.ResponseEntity;\nimport org.springframework.http.HttpHeaders;\nimport org.springframework.http.ResponseCookie;/g' ../backend/src/main/java/com/example/backend/controller/AuthController.java

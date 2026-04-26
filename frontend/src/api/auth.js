@@ -40,7 +40,9 @@ const post = async (endpoint, body) => {
   try {
     res = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(body),
     });
   } catch {
@@ -69,7 +71,8 @@ const patchAuth = async (endpoint, body) => {
   try {
     res = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PATCH',
-      headers: {
+      credentials: "include",
+        headers: {
         'Content-Type': 'application/json',
         ...authHeader(),
       },

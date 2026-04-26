@@ -5,7 +5,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080
 const apiClient = async (endpoint, options = {}) => {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      headers: {
+      credentials: "include",
+        headers: {
         'Content-Type': 'application/json',
         ...authHeader(),
         ...options.headers,
@@ -96,7 +97,8 @@ export const addFood = async (formData) => {
 
     const response = await fetch(`${API_BASE_URL}/food`, {
       method: 'POST',
-      headers: { ...authHeader() },
+      credentials: "include",
+        headers: { ...authHeader() },
       body,
     });
 
