@@ -305,9 +305,9 @@ const Feed = ({ pageSize = 5 }) => {
         width="100%"
         height="auto"
         borderRadius={22}
-        backgroundOpacity={0.58}
+        backgroundOpacity={40}
         blur={1}
-        saturation={1}
+        saturation={5}
         className="sticky top-0 z-40 mb-3 md:mb-4 w-full bg-[#FFE7E3] md:bg-transparent"
       >
         <div className="w-full rounded-[22px] bg-transparent px-3 py-3 md:px-4 md:py-4">
