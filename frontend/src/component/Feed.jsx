@@ -54,7 +54,6 @@ const Feed = ({ pageSize = 5 }) => {
   const [currentUser, setCurrentUser] = useState(() => getUser());
   const [requestingLocation, setRequestingLocation] = useState(false);
   const [locationPromptMessage, setLocationPromptMessage] = useState('');
-  const [isDesktopView, setIsDesktopView] = useState(() => window.innerWidth >= 768);
 
   const toNumberOrNull = (value) => {
     if (value == null) return null;
@@ -124,12 +123,6 @@ const Feed = ({ pageSize = 5 }) => {
     observer.observe(loaderRef.current);
     return () => observer.disconnect();
   }, [hasMore, loading]);
-
-  useEffect(() => {
-    const handleResize = () => setIsDesktopView(window.innerWidth >= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const loadPage = async (pageNum, reset = false) => {
     if (loading) return;
@@ -312,12 +305,12 @@ const Feed = ({ pageSize = 5 }) => {
         width="100%"
         height="auto"
         borderRadius={22}
-        backgroundOpacity={isDesktopView ? 40 : 18}
-        blur={isDesktopView ? 1 : 0.5}
-        saturation={isDesktopView ? 5 : 3}
-        className="sticky top-0 z-40 mb-3 md:mb-4 w-full bg-[#FFF6F3]/85 md:bg-transparent"
+        backgroundOpacity={0.40}
+        blur={1}
+        saturation={1}
+        className="sticky top-0 z-40 mb-3 md:mb-4 w-full bg-[#FFE7E3] md:bg-transparent"
       >
-        <div className="w-full rounded-[22px] bg-white/35 md:bg-transparent px-3 py-3 md:px-4 md:py-4">
+        <div className="w-full rounded-[22px] bg-transparent px-3 py-3 md:px-4 md:py-4">
           <div className="flex flex-wrap items-center justify-between gap-2 md:gap-3">
             <div>
               <p className="text-xs md:text-sm font-semibold tracking-wide text-[#6B5454]">Distance Filter</p>
