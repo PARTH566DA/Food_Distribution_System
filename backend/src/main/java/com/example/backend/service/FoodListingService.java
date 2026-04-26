@@ -41,7 +41,6 @@ public class FoodListingService {
     private final NeedyZonesRepository needyZonesRepository;
     private final NotificationService notificationService;
     private final ImageStorageService imageStorageService;
-    private final FoodImageValidationService foodImageValidationService;
 
 
     @Transactional()
@@ -262,7 +261,6 @@ public class FoodListingService {
         }
 
         if (image != null && !image.isEmpty()) {
-            foodImageValidationService.validateAsFoodOrThrow(image);
             String imageUrl = imageStorageService.storeFoodImage(image);
             foodListing.setImageUrl(imageUrl);
         }
