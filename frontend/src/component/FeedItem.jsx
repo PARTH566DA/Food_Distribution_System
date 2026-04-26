@@ -288,7 +288,7 @@ const FeedItem = ({
                 className="relative w-full overflow-hidden rounded-[20px] p-3 md:rounded-[25px] md:p-[10px] bg-[#FFECEA]"
             >
                 {distanceLabel && (
-                    <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+                    <div className="absolute top-3 left-3 md:left-auto md:right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 shadow-sm backdrop-blur-sm">
                         <img src={PinIcon} alt="Location pin" className="h-4 w-4" />
                         <span className="text-xs font-semibold text-[#6B5454]">{distanceLabel}</span>
                     </div>
