@@ -66,7 +66,6 @@ const MapAutoFit = ({ donorPos, userPos }) => {
 
 const FeedItem = ({
     item,
-    onAccept,
     confirming,
     expanded,
     onExpand,
@@ -92,15 +91,8 @@ const FeedItem = ({
     );
 
     const normalizedCurrentLocation = isValidPosition(currentLocation) ? currentLocation : null;
-    const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
     const [userPos, setUserPos] = useState(normalizedCurrentLocation);
     const [locationError, setLocationError] = useState(false);
-
-    useEffect(() => {
-        const handler = () => setIsDesktop(window.innerWidth >= 768);
-        window.addEventListener('resize', handler);
-        return () => window.removeEventListener('resize', handler);
-    }, []);
 
     useEffect(() => {
         if (normalizedCurrentLocation) {
@@ -260,11 +252,7 @@ const FeedItem = ({
 
     const handleClaimClick = () => {
         if (item.status !== 'available') return;
-        if (isDesktop) {
-            onExpand?.(item.id || item.foodId);
-        } else {
-            onAccept?.(item);
-        }
+        onExpand?.(item.id || item.foodId);
     };
 
     const handleStartZonePicker = () => {
@@ -390,7 +378,7 @@ const FeedItem = ({
                                     {item.status === 'available' && !isOwner &&
                                         renderAnimatedButton(
                                             handleClaimClick,
-                                            isDesktop ? (expanded ? 'Close' : 'Accept') : 'Accept'
+                                            expanded ? 'Close' : 'Accept'
                                         )
                                     }
                                     {item.status === 'claimed' && (
@@ -415,7 +403,7 @@ const FeedItem = ({
                 </div>
 
                 <AnimatePresence initial={false}>
-                    {expanded && isDesktop && (
+                    {expanded && (
                         <MotionDiv
                             key="desktop-detail"
                             initial={{ opacity: 0, height: 0 }}

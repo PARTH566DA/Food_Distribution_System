@@ -1,7 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import FeedItem from './FeedItem';
-import FoodDetailModal from './FoodDetailModal';
 import GlassSurface from './GlassSurface';
 import { fetchFoodPage, claimFood, deleteFood } from '../api/food';
 import { fetchAllZones } from '../api/zones';
@@ -26,7 +24,6 @@ const Feed = ({ pageSize = 5 }) => {
   const [error, setError] = useState(null);
   const [claiming, setClaiming] = useState(null);
   const [cancelling, setCancelling] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [zonePickerId, setZonePickerId] = useState(null);
   const [selectedZoneId, setSelectedZoneId] = useState(null);
@@ -121,9 +118,6 @@ const Feed = ({ pageSize = 5 }) => {
     }
   };
 
-  const handleAccept = (item) => {
-    setSelectedItem(item);
-  };
 
   const loadZones = async () => {
     if (zonesLoading || zones.length > 0) return;
@@ -337,7 +331,6 @@ const Feed = ({ pageSize = 5 }) => {
           <FeedItem
             key={getItemId(item)}
             item={item}
-            onAccept={handleAccept}
             confirming={claiming === getItemId(item)}
             expanded={expandedId === getItemId(item)}
             onExpand={(id) => setExpandedId(prev => prev === id ? null : id)}
@@ -407,17 +400,6 @@ const Feed = ({ pageSize = 5 }) => {
         </div>
       )}
 
-      <AnimatePresence>
-        {selectedItem && (
-          <FoodDetailModal
-            key={getItemId(selectedItem)}
-            item={selectedItem}
-            onClose={() => setSelectedItem(null)}
-            onConfirm={handleStartZoneSelection}
-            confirming={claiming === getItemId(selectedItem)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };
