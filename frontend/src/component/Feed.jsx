@@ -145,7 +145,6 @@ const Feed = ({ pageSize = 5 }) => {
 
   const handleStartZoneSelection = (itemOrId) => {
     const foodId = typeof itemOrId === 'object' ? getItemId(itemOrId) : itemOrId;
-    setSelectedItem(null);
     setExpandedId(foodId);
     setZonePickerId(foodId);
     setSelectedZoneId(null);
@@ -174,7 +173,6 @@ const Feed = ({ pageSize = 5 }) => {
         window.open(claimOptions.routeUrl, '_blank', 'noopener,noreferrer');
       }
 
-      setSelectedItem(null);
       setExpandedId(null);
       setZonePickerId(null);
       setSelectedZoneId(null);
@@ -276,7 +274,7 @@ const Feed = ({ pageSize = 5 }) => {
         saturation={1}
         className="sticky top-0 z-40 mb-3 md:mb-4 w-full bg-[#FFE7E3] md:bg-transparent"
       >
-        <div className="w-full rounded-[22px] bg-transparent px-3 py-3 md:px-4 md:py-4">
+        <div className="w-full z-100 rounded-[22px] bg-transparent px-3 py-3 md:px-4 md:py-4">
           <div className="flex flex-wrap items-center justify-between gap-2 md:gap-3">
             <div>
               <p className="text-xs md:text-sm font-semibold tracking-wide text-[#6B5454]">Distance Filter</p>
