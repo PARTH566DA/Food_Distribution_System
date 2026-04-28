@@ -279,6 +279,22 @@ const Map = () => {
         );
     }, []);
 
+    useEffect(() => {
+        if (!markingMode) return;
+        if (userPos) {
+            setCenterToUserTrigger((prev) => prev + 1);
+            return;
+        }
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setUserPos([pos.coords.latitude, pos.coords.longitude]);
+                setCenterToUserTrigger((prev) => prev + 1);
+            },
+            () => {}
+        );
+    }, [markingMode, userPos]);
+
     const handleMapClick = useCallback((latlng) => {
         // Show immediate duplicate feedback before making a network request.
         const visibleZones = zones.filter((z) => z.status !== 'INACTIVE');
@@ -427,6 +443,10 @@ const Map = () => {
     }, [pickupPos, targetPos]);
 
     const useFallbackTiles = tileErrorCount >= 3;
+    const isNewMarkerAtUser = useMemo(() => {
+        if (!userPos || !newMarkerPos) return false;
+        return haversineMetres(userPos[0], userPos[1], newMarkerPos[0], newMarkerPos[1]) <= 3;
+    }, [userPos, newMarkerPos]);
 
     return (
         <MainLayout activeHref="/map">
@@ -479,7 +499,7 @@ const Map = () => {
                             </Marker>
                         ))}
 
-                        {userPos && (
+                        {userPos && !isNewMarkerAtUser && (
                             <Marker position={userPos} icon={userPosIcon}>
                                 <Popup>Your location</Popup>
                             </Marker>
