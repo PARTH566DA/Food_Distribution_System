@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     MapContainer,
@@ -13,6 +13,7 @@ import 'leaflet/dist/leaflet.css';
 import MainLayout from '../Layout/MainLayout';
 import { fetchAllZones, createNeedyZone, reportZone, DuplicateZoneError } from '../api/zones';
 import { isAuthenticated } from '../api/auth';
+import { useLocation } from 'react-router-dom';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -89,6 +90,28 @@ const userPosIcon = L.divIcon({
     iconAnchor: [8, 8],
 });
 
+const pickupIcon = L.divIcon({
+    html: `<div style="
+        width:18px;height:18px;border-radius:50%;
+        background:#2ecc71;border:3px solid white;
+        box-shadow:0 2px 8px rgba(0,0,0,0.25);
+    "></div>`,
+    className: '',
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+});
+
+const targetZoneIcon = L.divIcon({
+    html: `<div style="
+        width:18px;height:18px;border-radius:50%;
+        background:#3388ff;border:3px solid white;
+        box-shadow:0 2px 8px rgba(0,0,0,0.25);
+    "></div>`,
+    className: '',
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+});
+
 const MapClickHandler = ({ active, onMapClick }) => {
     useMapEvents({
         click(e) {
@@ -98,14 +121,20 @@ const MapClickHandler = ({ active, onMapClick }) => {
     return null;
 };
 
-const MapFitBounds = ({ zones }) => {
+const MapFitBounds = ({ zones, focusPoints }) => {
     const map = useMap();
     useEffect(() => {
+        if (focusPoints.length > 0) {
+            const bounds = L.latLngBounds(focusPoints);
+            map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
+            return;
+        }
+
         if (zones.length > 0) {
             const bounds = L.latLngBounds(zones.map((z) => [z.latitude, z.longitude]));
             map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
         }
-    }, []);
+    }, [map, zones, focusPoints]);
     return null;
 };
 
@@ -116,6 +145,17 @@ const MapCenterOnUser = ({ userPos, trigger }) => {
         if (!userPos) return;
         map.flyTo(userPos, Math.max(map.getZoom(), 15), { duration: 0.8 });
     }, [map, userPos, trigger]);
+
+    return null;
+};
+
+const MapFocusOnZone = ({ zone, trigger }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!zone) return;
+        map.flyTo([zone.latitude, zone.longitude], Math.max(map.getZoom(), 15), { duration: 0.8 });
+    }, [map, zone, trigger]);
 
     return null;
 };
@@ -149,11 +189,43 @@ const TAG_REASONS = [
 const MotionDiv = motion.div;
 const MotionButton = motion.button;
 
+const toNumberOrNull = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+};
+
+const formatLatLng = (pos) => {
+    if (!pos || pos.length !== 2) return 'Not available';
+    return `${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}`;
+};
+
 const Map = () => {
+    const location = useLocation();
+    const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+    const pickupPos = useMemo(() => {
+        const lat = toNumberOrNull(query.get('pickupLat'));
+        const lng = toNumberOrNull(query.get('pickupLng'));
+        return lat != null && lng != null ? [lat, lng] : null;
+    }, [query]);
+    const targetPosFromQuery = useMemo(() => {
+        const lat = toNumberOrNull(query.get('zoneLat'));
+        const lng = toNumberOrNull(query.get('zoneLng'));
+        return lat != null && lng != null ? [lat, lng] : null;
+    }, [query]);
+    const initialZoneId = useMemo(() => {
+        const raw = query.get('zoneId');
+        const parsed = raw ? Number(raw) : null;
+        return Number.isFinite(parsed) ? parsed : null;
+    }, [query]);
+    const targetZoneName = query.get('zoneName');
+    const foodRef = query.get('food');
+
     const [zones, setZones]               = useState([]);
     const [loading, setLoading]           = useState(true);
     const [fetchError, setFetchError]     = useState(null);
     const [selectedZone, setSelectedZone] = useState(null);
+    const [focusedZoneId, setFocusedZoneId] = useState(initialZoneId);
+    const [focusTrigger, setFocusTrigger] = useState(0);
 
     const [markingMode, setMarkingMode]     = useState(false);
     const [newMarkerPos, setNewMarkerPos]   = useState(null);
@@ -183,6 +255,25 @@ const Map = () => {
     }, []);
 
     useEffect(() => { loadZones(); }, [loadZones]);
+    useEffect(() => {
+        if (!initialZoneId || zones.length === 0) return;
+        const match = zones.find((z) => z.needyZoneId === initialZoneId);
+        if (match) {
+            setSelectedZone(match);
+            setFocusedZoneId(initialZoneId);
+            setFocusTrigger((prev) => prev + 1);
+        }
+    }, [initialZoneId, zones]);
+
+    useEffect(() => {
+        if (!focusedZoneId) return;
+        const match = zones.find((z) => z.needyZoneId === focusedZoneId);
+        if (match) {
+            setSelectedZone(match);
+            setFocusTrigger((prev) => prev + 1);
+        }
+    }, [focusedZoneId, zones]);
+
 
     useEffect(() => {
         if (!navigator.geolocation) return;
@@ -324,6 +415,21 @@ const Map = () => {
 
     const defaultCenter = userPos ?? [20.5937, 78.9629];
     const visibleZones = zones.filter((zone) => zone.status !== 'INACTIVE');
+    const focusedZone = focusedZoneId
+        ? visibleZones.find((z) => z.needyZoneId === focusedZoneId)
+        : null;
+    const targetPos = targetPosFromQuery
+        ? targetPosFromQuery
+        : focusedZone
+            ? [focusedZone.latitude, focusedZone.longitude]
+            : null;
+    const zoneLabel = focusedZone?.name || targetZoneName || 'Not selected';
+    const focusPoints = useMemo(() => {
+        const points = [];
+        if (pickupPos) points.push(pickupPos);
+        if (targetPos) points.push(targetPos);
+        return points;
+    }, [pickupPos, targetPos]);
 
     return (
         <MainLayout activeHref="/map">
@@ -372,12 +478,34 @@ const Map = () => {
                             </Marker>
                         )}
 
+                        {pickupPos && (
+                            <Marker position={pickupPos} icon={pickupIcon}>
+                                <Popup>
+                                    <strong>Pickup location</strong>
+                                    {foodRef && (
+                                        <div style={{ fontSize: 11, color: '#666' }}>Order {foodRef}</div>
+                                    )}
+                                </Popup>
+                            </Marker>
+                        )}
+
+                        {targetPos && (
+                            <Marker position={targetPos} icon={targetZoneIcon}>
+                                <Popup>
+                                    <strong>{targetZoneName || 'Selected needy zone'}</strong>
+                                </Popup>
+                            </Marker>
+                        )}
+
                         {newMarkerPos && (
                             <Marker position={newMarkerPos} icon={newZoneIcon} />
                         )}
 
-                        {visibleZones.length > 0 && <MapFitBounds zones={visibleZones} />}
+                        {(visibleZones.length > 0 || focusPoints.length > 0) && (
+                            <MapFitBounds zones={visibleZones} focusPoints={focusPoints} />
+                        )}
                         <MapCenterOnUser userPos={userPos} trigger={centerToUserTrigger} />
+                        <MapFocusOnZone zone={focusedZone} trigger={focusTrigger} />
 
                         <MapClickHandler
                             active={markingMode && !showForm}
@@ -391,6 +519,39 @@ const Map = () => {
                         <p className="text-xs font-semibold text-gray-600 whitespace-nowrap">
                             {visibleZones.length} needy zone{visibleZones.length !== 1 ? 's' : ''} on map
                         </p>
+                    </div>
+                </div>
+
+                <div className="absolute top-3 left-3 z-10">
+                    <div className="rounded-2xl border border-[#FFE0DB] bg-white/90 px-3 py-2 shadow backdrop-blur">
+                        <p className="text-[11px] font-semibold text-[#7A5F5A]">Pickup</p>
+                        <p className="text-[11px] text-[#6A5450]">{formatLatLng(pickupPos)}</p>
+                        <p className="mt-2 text-[11px] font-semibold text-[#7A5F5A]">Needy zone</p>
+                        <p className="text-[11px] text-[#6A5450]">{zoneLabel}</p>
+                        {zoneLabel === 'Not selected' && (
+                            <p className="mt-1 text-[10px] text-[#8D746E]">Use the dropdown to pick a zone.</p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="absolute top-3 right-3 z-10">
+                    <div className="rounded-2xl border border-[#FFE0DB] bg-white/90 px-3 py-2 shadow backdrop-blur">
+                        <p className="text-[11px] font-semibold text-[#7A5F5A]">Needy zone</p>
+                        <select
+                            value={focusedZoneId ?? ''}
+                            onChange={(e) => {
+                                const nextValue = e.target.value ? Number(e.target.value) : null;
+                                setFocusedZoneId(Number.isFinite(nextValue) ? nextValue : null);
+                            }}
+                            className="mt-1 w-[170px] rounded-lg border border-[#EAD3CE] bg-white px-2 py-1 text-[11px] text-[#6A5450]"
+                        >
+                            <option value="">Select zone</option>
+                            {visibleZones.map((zone) => (
+                                <option key={zone.needyZoneId} value={zone.needyZoneId}>
+                                    {zone.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

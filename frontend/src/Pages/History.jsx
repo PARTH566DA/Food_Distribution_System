@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import MainLayout from "../Layout/MainLayout";
 import {
     fetchAcceptedHistory,
@@ -52,12 +53,42 @@ const formatDate = (rawDate) => {
     });
 };
 
+const toNumberOrNull = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+};
+
 const buildMapUrl = (item) => {
-    const hasCoords = item?.pickupLatitude != null && item?.pickupLongitude != null;
-    if (hasCoords) {
-        return `https://www.google.com/maps/search/?api=1&query=${item.pickupLatitude},${item.pickupLongitude}`;
+    const params = new URLSearchParams();
+
+    const pickupLat = toNumberOrNull(item?.pickupLatitude);
+    const pickupLng = toNumberOrNull(item?.pickupLongitude);
+    if (pickupLat != null && pickupLng != null) {
+        params.set("pickupLat", String(pickupLat));
+        params.set("pickupLng", String(pickupLng));
     }
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item?.address || "")}`;
+
+    const zoneLat = toNumberOrNull(item?.targetZoneLatitude);
+    const zoneLng = toNumberOrNull(item?.targetZoneLongitude);
+    if (zoneLat != null && zoneLng != null) {
+        params.set("zoneLat", String(zoneLat));
+        params.set("zoneLng", String(zoneLng));
+    }
+
+    const zoneId = item?.needyZoneId ?? item?.targetZoneId;
+    if (zoneId != null) {
+        params.set("zoneId", String(zoneId));
+    }
+
+    if (item?.targetZoneName) {
+        params.set("zoneName", item.targetZoneName);
+    }
+
+    if (item?.foodId || item?.id) {
+        params.set("food", String(item.foodId || item.id));
+    }
+
+    return `/map${params.toString() ? `?${params.toString()}` : ""}`;
 };
 
 const isInProcess = (status) => ["open", "assigned", "picked_up"].includes(status);
@@ -376,17 +407,15 @@ const HistoryCard = ({ item, tab, onProgressUpdate, updatingAction, currentUser,
                         </button>
                     )}
 
-                    <a
-                        href={mapUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                    <Link
+                        to={mapUrl}
                         className="inline-flex items-center gap-2 rounded-full bg-[#FF8B77] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF7A66] transition-colors"
                     >
                         <span>View On Map</span>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
                         </svg>
-                    </a>
+                    </Link>
                 </div>
             )}
 
