@@ -496,7 +496,7 @@ const AddFood = () => {
 
                     <div className="flex flex-col gap-4 md:flex-row md:justify-between">
                       <div className="flex flex-col gap-3 flex-1">
-                        <div className="flex flex-wrap items-center gap-2 text-sm md:text-base">
+                        <div className="flex flex-wrap md:flex-nowrap items-center gap-2 text-sm md:text-base">
                           <img src={QuantityIcon} alt="Quantity" className="w-5 h-5" />
                           <span className="font-semibold text-black">Serve:</span>
                           <div className="flex items-center gap-2 bg-white/50 border border-gray-300 rounded-lg px-2 py-1">
@@ -552,9 +552,9 @@ const AddFood = () => {
                               +
                             </button>
                           </div>
-                          <span className="text-gray-700">people</span>
+                          <span className="text-gray-700 whitespace-nowrap">people</span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 text-sm md:text-base">
+                        <div className="flex flex-wrap md:flex-nowrap items-center gap-2 text-sm md:text-base">
                           <img src={ClockIcon} alt="Expiry" className="w-5 h-5" />
                           <span className="font-semibold text-black">Fresh:</span>
                           <div className="flex items-center gap-2 bg-white/50 border border-gray-300 rounded-lg px-2 py-1">
@@ -610,7 +610,7 @@ const AddFood = () => {
                               +
                             </button>
                           </div>
-                          <span className="text-gray-700">hrs.</span>
+                          <span className="text-gray-700 whitespace-nowrap">hrs.</span>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 text-sm md:text-base">
@@ -675,7 +675,7 @@ const AddFood = () => {
                   )}
                 </MapContainer>
                 
-                <div className="absolute bottom-3 left-3 right-3 z-[1000] bg-[#FFECEA] backdrop-blur-sm rounded-xl shadow-lg p-3 md:bottom-4 md:left-4 md:right-4 md:p-4">
+                <div className="absolute bottom-3 left-3 right-3 z-[9999] pointer-events-auto bg-[#FFECEA] backdrop-blur-sm rounded-xl shadow-lg p-3 md:bottom-4 md:left-4 md:right-4 md:p-4">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
                     <div className="flex items-center gap-2 min-w-0">
                       <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
