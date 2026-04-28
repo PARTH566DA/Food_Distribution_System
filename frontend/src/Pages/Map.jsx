@@ -221,6 +221,7 @@ const Map = () => {
     const [selectedZone, setSelectedZone] = useState(null);
     const [focusedZoneId, setFocusedZoneId] = useState(initialZoneId);
     const [focusTrigger, setFocusTrigger] = useState(0);
+    const [tileErrorCount, setTileErrorCount] = useState(0);
 
     const [markingMode, setMarkingMode]     = useState(false);
     const [newMarkerPos, setNewMarkerPos]   = useState(null);
@@ -425,6 +426,8 @@ const Map = () => {
         return points;
     }, [pickupPos, targetPos]);
 
+    const useFallbackTiles = tileErrorCount >= 3;
+
     return (
         <MainLayout activeHref="/map">
             <div className="relative mt-3 mb-2 h-[calc(100%-12px)] w-full left-1/2 -translate-x-1/2 overflow-hidden rounded-[20px] md:mt-[24px] md:mb-[12px] md:h-[calc(100%-24px)] md:w-[60%] md:rounded-[25px]">
@@ -446,10 +449,20 @@ const Map = () => {
                         scrollWheelZoom
                         zoomControl={false}
                     >
-                        <TileLayer
-                            attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
-                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                        />
+                        {useFallbackTiles ? (
+                            <TileLayer
+                                attribution='&copy; OpenStreetMap contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                        ) : (
+                            <TileLayer
+                                attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+                                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                                eventHandlers={{
+                                    tileerror: () => setTileErrorCount((count) => count + 1),
+                                }}
+                            />
+                        )}
 
                         {visibleZones.map((zone) => (
                             <Marker
