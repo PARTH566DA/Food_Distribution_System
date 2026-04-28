@@ -521,26 +521,14 @@ const Map = () => {
                     </MapContainer>
                 )}
 
-                <div className="absolute top-3 right-3 z-10">
-                    <div className="rounded-2xl border border-[#FFE0DB] bg-white/90 px-3 py-2 shadow backdrop-blur">
-                        <p className="text-[11px] font-semibold text-[#7A5F5A]">Needy zone</p>
-                        <select
-                            value={focusedZoneId ?? ''}
-                            onChange={(e) => {
-                                const nextValue = e.target.value ? Number(e.target.value) : null;
-                                setFocusedZoneId(Number.isFinite(nextValue) ? nextValue : null);
-                            }}
-                            className="mt-1 w-[170px] rounded-lg border border-[#EAD3CE] bg-white px-2 py-1 text-[11px] text-[#6A5450]"
-                        >
-                            <option value="">Select zone</option>
-                            {visibleZones.map((zone) => (
-                                <option key={zone.needyZoneId} value={zone.needyZoneId}>
-                                    {zone.name}
-                                </option>
-                            ))}
-                        </select>
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+                    <div className="bg-white/85 backdrop-blur-md rounded-2xl px-4 py-2 shadow border border-[#FFE0DB]">
+                        <p className="text-xs font-semibold text-gray-600 whitespace-nowrap">
+                            {visibleZones.length} needy zone{visibleZones.length !== 1 ? 's' : ''} on map
+                        </p>
                     </div>
                 </div>
+
 
                 {fetchError && (
                     <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10">
