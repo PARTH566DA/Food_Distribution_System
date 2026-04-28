@@ -361,6 +361,9 @@ const Map = () => {
         setFormError('');
         setSubmitSuccess(false);
         setNearbyWarning(null);
+        if (userPos) {
+            setCenterToUserTrigger((prev) => prev + 1);
+        }
     };
 
     const handleSubmit = async () => {
