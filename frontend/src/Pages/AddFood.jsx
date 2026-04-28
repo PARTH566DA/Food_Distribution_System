@@ -412,8 +412,8 @@ const AddFood = () => {
 
   return (
     <MainLayout activeHref="/addfood">
-      <div className="flex h-full w-full items-start justify-center px-2 py-3 md:py-6">
-        <div className="w-full md:w-[60%]">
+      <div className="h-full w-full px-2 py-3 md:py-6">
+        <div className="mx-auto w-full md:w-[60%]">
 
           <form onSubmit={handleSubmit}>
             <div className="w-full overflow-hidden rounded-[20px] p-3 md:rounded-[25px] md:p-[10px] bg-[#FFECEA]">
