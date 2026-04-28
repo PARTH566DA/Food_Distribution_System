@@ -194,11 +194,6 @@ const toNumberOrNull = (value) => {
     return Number.isFinite(parsed) ? parsed : null;
 };
 
-const formatLatLng = (pos) => {
-    if (!pos || pos.length !== 2) return 'Not available';
-    return `${pos[0].toFixed(5)}, ${pos[1].toFixed(5)}`;
-};
-
 const Map = () => {
     const location = useLocation();
     const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -423,7 +418,6 @@ const Map = () => {
         : focusedZone
             ? [focusedZone.latitude, focusedZone.longitude]
             : null;
-    const zoneLabel = focusedZone?.name || targetZoneName || 'Not selected';
     const focusPoints = useMemo(() => {
         const points = [];
         if (pickupPos) points.push(pickupPos);
@@ -519,18 +513,6 @@ const Map = () => {
                         <p className="text-xs font-semibold text-gray-600 whitespace-nowrap">
                             {visibleZones.length} needy zone{visibleZones.length !== 1 ? 's' : ''} on map
                         </p>
-                    </div>
-                </div>
-
-                <div className="absolute top-3 left-3 z-10">
-                    <div className="rounded-2xl border border-[#FFE0DB] bg-white/90 px-3 py-2 shadow backdrop-blur">
-                        <p className="text-[11px] font-semibold text-[#7A5F5A]">Pickup</p>
-                        <p className="text-[11px] text-[#6A5450]">{formatLatLng(pickupPos)}</p>
-                        <p className="mt-2 text-[11px] font-semibold text-[#7A5F5A]">Needy zone</p>
-                        <p className="text-[11px] text-[#6A5450]">{zoneLabel}</p>
-                        {zoneLabel === 'Not selected' && (
-                            <p className="mt-1 text-[10px] text-[#8D746E]">Use the dropdown to pick a zone.</p>
-                        )}
                     </div>
                 </div>
 
