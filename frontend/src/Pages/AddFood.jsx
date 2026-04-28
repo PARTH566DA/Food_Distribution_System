@@ -418,7 +418,7 @@ const AddFood = () => {
           <form onSubmit={handleSubmit}>
             <div className="w-full overflow-hidden rounded-[20px] p-3 md:rounded-[25px] md:p-[10px] bg-[#FFECEA]">
               <div className="flex flex-col gap-3 md:flex-row md:gap-[10px]">
-                <div className="w-full md:w-[35%] flex-shrink-0 relative">
+                <div className="w-full md:w-[35%] flex-shrink-0 relative md:my-auto">
                   <div className="relative w-full aspect-square">
                     <label
                       htmlFor="image-upload"
@@ -468,7 +468,7 @@ const AddFood = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 flex flex-col mt-0 md:mt-[10px] justify-between">
+                <div className="flex-1 flex flex-col mt-0 justify-between">
                   <div className="w-full">
                     <input
                       type="text"
@@ -494,7 +494,7 @@ const AddFood = () => {
                   <div>
                     <div className="w-full h-[2px] bg-[#D9D9D9] mb-4"></div>
 
-                    <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+                    <div className="flex flex-col gap-4 md:flex-row md:justify-between md:pr-2">
                       <div className="flex flex-col gap-3 flex-1">
                         <div className="flex flex-wrap md:flex-nowrap items-center gap-2 text-sm md:text-base">
                           <img src={QuantityIcon} alt="Quantity" className="w-5 h-5" />
@@ -639,7 +639,7 @@ const AddFood = () => {
                         </div>
                       </div>
 
-                      <div className="flex flex-col justify-end md:mr-[10px]">
+                      <div className="flex flex-col justify-end md:mr-4 md:mb-1">
                         {renderSubmitButton()}
                       </div>
                     </div>
