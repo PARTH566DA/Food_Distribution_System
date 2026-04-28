@@ -521,14 +521,6 @@ const Map = () => {
                     </MapContainer>
                 )}
 
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-                    <div className="bg-white/85 backdrop-blur-md rounded-2xl px-4 py-2 shadow border border-[#FFE0DB]">
-                        <p className="text-xs font-semibold text-gray-600 whitespace-nowrap">
-                            {visibleZones.length} needy zone{visibleZones.length !== 1 ? 's' : ''} on map
-                        </p>
-                    </div>
-                </div>
-
                 <div className="absolute top-3 right-3 z-10">
                     <div className="rounded-2xl border border-[#FFE0DB] bg-white/90 px-3 py-2 shadow backdrop-blur">
                         <p className="text-[11px] font-semibold text-[#7A5F5A]">Needy zone</p>
