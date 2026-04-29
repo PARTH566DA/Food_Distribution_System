@@ -10,7 +10,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${app.mail.from}")
     private String fromAddress;
 
     public EmailService(JavaMailSender mailSender) {
@@ -21,14 +21,14 @@ public class EmailService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromAddress);
         message.setTo(toEmail);
-        message.setSubject("Your OTP for Food Distribution System – " + purpose);
+        message.setSubject("Your OTP for Food Distribution System - " + purpose);
         message.setText(
             "Hello,\n\n" +
             "Your one-time password (OTP) for " + purpose + " is:\n\n" +
             "  " + otp + "\n\n" +
             "This OTP is valid for 10 minutes. Do not share it with anyone.\n\n" +
             "If you did not request this, please ignore this email.\n\n" +
-            "– Food Distribution System"
+            "- Food Distribution System"
         );
         mailSender.send(message);
     }
