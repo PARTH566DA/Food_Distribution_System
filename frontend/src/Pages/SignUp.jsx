@@ -190,6 +190,9 @@ const SignUp = () => {
                                 We sent a 6-digit OTP to{" "}
                                 <span className="font-semibold text-gray-700">{emailId}</span>.
                             </p>
+                            <p className="text-xs text-gray-400 -mt-6">
+                                If you do not see the email, check your spam folder.
+                            </p>
 
                             <input
                                 type="text"
