@@ -240,6 +240,7 @@ const Map = () => {
     const [reportState, setReportState]     = useState('idle');
     const [reportCount, setReportCount]     = useState(null);
     const [centerToUserTrigger, setCenterToUserTrigger] = useState(0);
+    const [recenterAfterSubmit, setRecenterAfterSubmit] = useState(false);
 
     const authenticated = isAuthenticated();
 
@@ -294,6 +295,12 @@ const Map = () => {
             () => {}
         );
     }, [markingMode, userPos]);
+
+    useEffect(() => {
+        if (!recenterAfterSubmit) return;
+        const timer = setTimeout(() => setRecenterAfterSubmit(false), 700);
+        return () => clearTimeout(timer);
+    }, [recenterAfterSubmit]);
 
     const handleMapClick = useCallback((latlng) => {
         // Show immediate duplicate feedback before making a network request.
@@ -363,6 +370,14 @@ const Map = () => {
         setNearbyWarning(null);
         if (userPos) {
             setCenterToUserTrigger((prev) => prev + 1);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    setUserPos([pos.coords.latitude, pos.coords.longitude]);
+                    setCenterToUserTrigger((prev) => prev + 1);
+                },
+                () => {}
+            );
         }
     };
 
@@ -380,6 +395,7 @@ const Map = () => {
             });
             setSubmitSuccess(true);
             loadZones();
+            setRecenterAfterSubmit(true);
             if (userPos) {
                 setCenterToUserTrigger((prev) => prev + 1);
             } else if (navigator.geolocation) {
@@ -549,7 +565,7 @@ const Map = () => {
                             <Marker position={newMarkerPos} icon={newZoneIcon} />
                         )}
 
-                        {(visibleZones.length > 0 || focusPoints.length > 0) && (
+                        {!recenterAfterSubmit && (visibleZones.length > 0 || focusPoints.length > 0) && (
                             <MapFitBounds zones={visibleZones} focusPoints={focusPoints} />
                         )}
                         <MapCenterOnUser userPos={userPos} trigger={centerToUserTrigger} />
