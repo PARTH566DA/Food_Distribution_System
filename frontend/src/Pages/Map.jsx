@@ -380,6 +380,17 @@ const Map = () => {
             });
             setSubmitSuccess(true);
             loadZones();
+            if (userPos) {
+                setCenterToUserTrigger((prev) => prev + 1);
+            } else if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        setUserPos([pos.coords.latitude, pos.coords.longitude]);
+                        setCenterToUserTrigger((prev) => prev + 1);
+                    },
+                    () => {}
+                );
+            }
             setTimeout(handleCancelMarking, 2200);
         } catch (e) {
             if (e instanceof DuplicateZoneError) {
