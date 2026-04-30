@@ -6,6 +6,7 @@ import Notification from './Pages/Notification';
 import LocationSelector from './component/LocationSelector';
 import SignUp from './Pages/SignUp';
 import Login from './Pages/Login';
+import LandingPage from './Pages/LandingPage';
 import Map from './Pages/Map';
 import Admin from './Pages/Admin';
 import History from './Pages/History';
@@ -31,8 +32,8 @@ const App = () => {
 
         <Route path="/admin" element={<Admin />} />
 
-        <Route path="/" element={<Navigate to={isAuthenticated() ? '/home' : '/login'} replace />} />
-        <Route path="*" element={<Navigate to={isAuthenticated() ? '/home' : '/login'} replace />} />
+        <Route path="/" element={isAuthenticated() ? <Navigate to="/home" replace /> : <LandingPage />} />
+        <Route path="*" element={<Navigate to={isAuthenticated() ? '/home' : '/'} replace />} />
       </Routes>
     </div>
   );
