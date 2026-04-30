@@ -17,7 +17,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/zones")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class NeedyZoneController {
 
     private final NeedyZoneService needyZoneService;

@@ -17,7 +17,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/assignments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Slf4j
 public class AssignmentChatController {
 

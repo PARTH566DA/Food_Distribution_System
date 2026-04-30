@@ -15,5 +15,7 @@ logs/
 
 # Env
 .env
+.env.*
 *.env
+*.env.*
 

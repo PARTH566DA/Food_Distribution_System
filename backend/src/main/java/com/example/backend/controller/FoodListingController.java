@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/food")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Slf4j
 public class FoodListingController {
 
