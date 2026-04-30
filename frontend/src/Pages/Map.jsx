@@ -240,7 +240,7 @@ const Map = () => {
     const [reportState, setReportState]     = useState('idle');
     const [reportCount, setReportCount]     = useState(null);
     const [centerToUserTrigger, setCenterToUserTrigger] = useState(0);
-    const [recenterAfterSubmit, setRecenterAfterSubmit] = useState(false);
+    const [suspendFitBounds, setSuspendFitBounds] = useState(false);
 
     const authenticated = isAuthenticated();
 
@@ -295,12 +295,6 @@ const Map = () => {
             () => {}
         );
     }, [markingMode, userPos]);
-
-    useEffect(() => {
-        if (!recenterAfterSubmit) return;
-        const timer = setTimeout(() => setRecenterAfterSubmit(false), 700);
-        return () => clearTimeout(timer);
-    }, [recenterAfterSubmit]);
 
     const handleMapClick = useCallback((latlng) => {
         // Show immediate duplicate feedback before making a network request.
@@ -370,14 +364,6 @@ const Map = () => {
         setNearbyWarning(null);
         if (userPos) {
             setCenterToUserTrigger((prev) => prev + 1);
-        } else if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    setUserPos([pos.coords.latitude, pos.coords.longitude]);
-                    setCenterToUserTrigger((prev) => prev + 1);
-                },
-                () => {}
-            );
         }
     };
 
@@ -395,7 +381,7 @@ const Map = () => {
             });
             setSubmitSuccess(true);
             loadZones();
-            setRecenterAfterSubmit(true);
+            setSuspendFitBounds(true);
             if (userPos) {
                 setCenterToUserTrigger((prev) => prev + 1);
             } else if (navigator.geolocation) {
@@ -407,7 +393,10 @@ const Map = () => {
                     () => {}
                 );
             }
-            setTimeout(handleCancelMarking, 2200);
+            setTimeout(() => {
+                setSuspendFitBounds(false);
+                handleCancelMarking();
+            }, 2200);
         } catch (e) {
             if (e instanceof DuplicateZoneError) {
                 // Replace client guess with server-confirmed duplicate zone when available.
@@ -565,7 +554,7 @@ const Map = () => {
                             <Marker position={newMarkerPos} icon={newZoneIcon} />
                         )}
 
-                        {!recenterAfterSubmit && (visibleZones.length > 0 || focusPoints.length > 0) && (
+                        {!suspendFitBounds && (visibleZones.length > 0 || focusPoints.length > 0) && (
                             <MapFitBounds zones={visibleZones} focusPoints={focusPoints} />
                         )}
                         <MapCenterOnUser userPos={userPos} trigger={centerToUserTrigger} />
