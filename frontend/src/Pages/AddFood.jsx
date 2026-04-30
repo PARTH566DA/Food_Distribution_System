@@ -71,6 +71,7 @@ const AddFood = () => {
 
   const defaultCenter = [23.0225, 72.5714];
   const defaultZoom = 13;
+  const [mapCenter, setMapCenter] = useState(defaultCenter);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -153,11 +154,13 @@ const AddFood = () => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const nextCenter = [position.coords.latitude, position.coords.longitude];
         setFormData(prev => ({
           ...prev,
           latitude: position.coords.latitude.toFixed(6),
           longitude: position.coords.longitude.toFixed(6)
         }));
+        setMapCenter(nextCenter);
         setCenterToLocationTrigger(prev => prev + 1);
         setGpsLoading(false);
       },
@@ -189,6 +192,7 @@ const AddFood = () => {
       latitude: lat.toFixed(6),
       longitude: lng.toFixed(6)
     }));
+    setMapCenter([lat, lng]);
   };
 
   const normalizeText = (value) =>
@@ -350,6 +354,7 @@ const AddFood = () => {
           latitude: bestMatch.lat.toFixed(6),
           longitude: bestMatch.lng.toFixed(6)
         }));
+        setMapCenter([bestMatch.lat, bestMatch.lng]);
         setCenterToLocationTrigger(prev => prev + 1);
         setGeocodeError(null);
       } catch (error) {
@@ -656,12 +661,12 @@ const AddFood = () => {
 
             <div className="w-full mt-5 md:mt-6 rounded-[20px] md:rounded-[25px] overflow-hidden relative h-[280px] md:h-[400px]">
                 <MapContainer
-                  center={formData.latitude && formData.longitude ? [parseFloat(formData.latitude), parseFloat(formData.longitude)] : defaultCenter}
+                  center={mapCenter}
                   zoom={defaultZoom}
                   style={{ height: '100%', width: '100%' }}
                 >
                   <MapCenterOnLocation
-                    center={formData.latitude && formData.longitude ? [parseFloat(formData.latitude), parseFloat(formData.longitude)] : null}
+                    center={mapCenter}
                     trigger={centerToLocationTrigger}
                   />
                   <TileLayer
