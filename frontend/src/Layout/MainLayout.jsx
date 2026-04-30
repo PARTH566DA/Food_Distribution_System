@@ -106,7 +106,7 @@ const MainLayout = ({
     }, [isNotificationOpen, isProfileOpen]);
 
     return (
-        <div className="relative min-h-[100dvh] w-full overflow-hidden bg-white">
+        <div className="relative h-screen w-full overflow-hidden bg-white">    
             <div className="absolute top-0 left-0 w-full h-full">
                 <Gradient {...defaultGradientProps} {...gradientProps} />
             </div>
