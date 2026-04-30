@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import AnnapurnaLogo from "../assets/Annapurna.svg";
+import AnnapurnaLogo from "../assets/annapurnaPlain.svg";
 
 const LandingPage = () => {
 	return (
@@ -32,7 +32,7 @@ const LandingPage = () => {
 				</div>
 
 				<h1 className="landing__brand reveal" style={{ "--delay": "180ms" }}>
-					ANNAPURNA
+					AnnaPurna
 				</h1>
 				<p className="landing__tagline reveal" style={{ "--delay": "320ms" }}>
 					Surplus Food, Shared.
@@ -56,7 +56,7 @@ const LandingPage = () => {
 			</main>
 
 			<style>{`
-				@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Sora:wght@300;400;500;600&display=swap');
+				@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Noto+Serif+Devanagari:wght@400;500;600&family=Sora:wght@300;400;500;600&display=swap');
 
 				:root {
 					--earth-cream: #f5f0e8;
@@ -160,7 +160,7 @@ const LandingPage = () => {
 				}
 
 				.landing__brand {
-					font-family: 'Sora', sans-serif;
+					font-family: 'Noto Serif Devanagari', 'Sora', sans-serif;
 					font-size: clamp(2.6rem, 5vw, 4.1rem);
 					letter-spacing: 0.36em;
 					text-transform: uppercase;
