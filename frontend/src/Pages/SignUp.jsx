@@ -28,7 +28,6 @@ const gradientProps = {
     zoom: 1.65,
 };
 
-const ROLES = ["CITIZEN", "NGO"];
 const MOBILE_REGEX = /^[6-9]\d{9}$/;
 const NAME_REGEX = /^[A-Za-z ]+$/;
 
@@ -142,25 +141,6 @@ const SignUp = () => {
                                 onChange={(e) => setEmailId(e.target.value)}
                                 className="bg-transparent border-b border-[#D9C7C3] outline-none text-gray-700 placeholder-[#C0ABA6] py-2 text-base"
                             />
-
-                            <div className="flex flex-col gap-1">
-                                <div className="flex gap-3">
-                                    {ROLES.map((r) => (
-                                        <button
-                                            key={r}
-                                            type="button"
-                                            onClick={() => setRole(r)}
-                                            className={`flex-1 py-2 rounded-full text-sm font-semibold border transition-colors ${
-                                                role === r
-                                                    ? "bg-[#FF8B77] text-white border-[#FF8B77]"
-                                                    : "bg-transparent text-[#C0ABA6] border-[#D9C7C3] hover:border-[#FF8B77]"
-                                            }`}
-                                        >
-                                            {r.charAt(0) + r.slice(1).toLowerCase()}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
 
                             {error && <p className="text-red-500 text-sm -mt-4">{error}</p>}
 
