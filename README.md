@@ -1,4 +1,4 @@
-# 🍱 Food Distribution System
+# AnnaPurna
 
 A web application to reduce food wastage and help connect surplus food with people in need — through a community of donors and volunteers.
 
@@ -6,9 +6,9 @@ A web application to reduce food wastage and help connect surplus food with peop
 
 ## What is this?
 
-Every day, large amounts of food go to waste after weddings, parties, events, and gatherings — while many people nearby go without a meal. The **Food Distribution System** bridges this gap.
+Every day, large amounts of food go to waste after weddings, parties, events, and gatherings while many people nearby go without a meal. The **AnnaPurna** bridges this gap.
 
-The platform lets anyone post surplus food they want to donate. Volunteers can then pick up these donations and deliver them to nearby needy locations. Users can also mark **needy zones** — areas where food is frequently needed — which are verified by an admin to ensure authenticity.
+The platform lets anyone post surplus food they want to donate. Volunteers can then pick up these donations and deliver them to nearby needy locations. Users can also mark **needy zones**, areas where food is frequently needed which are verified by an admin to ensure authenticity.
 
 The goal is simple: make it easy for people who have food to find people who can deliver it, so nothing goes to waste.
 
@@ -18,7 +18,7 @@ The goal is simple: make it easy for people who have food to find people who can
 
 The idea came from a common, frustrating reality: after large gatherings, significant amounts of food often remain untouched. People are often *willing* to donate but don't know how, where, or who can help. At the same time, there are many volunteers who *want* to help but don't have a platform connecting them to opportunities.
 
-Existing apps in this space are mostly business-oriented — they let restaurants list leftover food at discounted prices — but none focus specifically on community-driven donation and volunteer delivery to those in need. This project was built to fill that gap.
+Existing apps in this space are mostly business oriented, they let restaurants list leftover food at discounted prices but none focus specifically on community driven donation and volunteer delivery to those in need. This project was built to fill that gap.
 
 ---
 
@@ -27,7 +27,7 @@ Existing apps in this space are mostly business-oriented — they let restaurant
 - Lets donors post food listings with details and images
 - Shows a live feed of available food that volunteers can browse
 - Lets volunteers claim food and update its delivery status
-- Lets users mark needy zones where food is frequently needed (admin-verified)
+- Lets users mark needy zones where food is frequently needed
 - Supports user login with OTP email verification
 
 ---
