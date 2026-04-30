@@ -56,7 +56,7 @@ const LandingPage = () => {
 			</main>
 
 			<style>{`
-				@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Noto+Serif+Devanagari:wght@400;500;600&family=Sora:wght@300;400;500;600&display=swap');
+				@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Sora:wght@300;400;500;600&display=swap');
 
 				:root {
 					--earth-cream: #f5f0e8;
@@ -160,7 +160,7 @@ const LandingPage = () => {
 				}
 
 				.landing__brand {
-					font-family: 'Noto Serif Devanagari', 'Sora', sans-serif;
+					font-family: 'Sora', sans-serif;
 					font-size: clamp(2.6rem, 5vw, 4.1rem);
 					letter-spacing: 0.36em;
 					text-transform: uppercase;
