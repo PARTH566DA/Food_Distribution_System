@@ -163,7 +163,6 @@ const LandingPage = () => {
 					font-family: 'Sora', sans-serif;
 					font-size: clamp(2.6rem, 5vw, 4.1rem);
 					letter-spacing: 0.36em;
-					text-transform: uppercase;
 					color: var(--earth-olive);
 					margin: 0;
 				}
